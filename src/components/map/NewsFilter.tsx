@@ -1,27 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import dynamic from "next/dynamic";
+
 import { useMapEvents } from 'react-leaflet';
-import Card from '../ui/Card';
 import { saveUserLocation, getUserLocation } from '@/lib/location_storage';
 import { SearchPoint } from '@/types/MarkerData';
-import dynamic from "next/dynamic";
 const Circle = dynamic(() => import("react-leaflet").then(mod => mod.Circle), {ssr: false});
+
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
 interface NewsFilterProps {
   setSearchPoint: (point: SearchPoint | null) => void;
   searchPoint: SearchPoint | null;
+  showFiltersMenu: boolean;
 }
 
-const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint }) => {
-
-  
+const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint, showFiltersMenu }) => {
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
         if (isSelectingPoint) {
-          setSearchPoint({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: searchPoint?.radius || 10000 });
-          saveUserLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: searchPoint?.radius || 10000 });
+          setSearchPoint({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: searchPoint?.radius || 1 });
+          saveUserLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: searchPoint?.radius || 1 });
           setIsSelectingPoint(false);
         }
       },
@@ -58,31 +60,30 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint }) 
       {searchPoint && (
           <Circle
             center={[searchPoint.latitude, searchPoint.longitude]}
-            radius={searchPoint.radius/1.6}
+            radius={searchPoint.radius/1.6 * 1000} // meters -> kilometers
             pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
           />
         )}
         
       <div 
-        className="absolute top-20 right-4 z-[1000] hidden sm:block"
+        className="absolute left-4 bottom-4 z-[1000]"
         onClick={handleCardClick}
       >
-        <Card className="w-72">
+        {showFiltersMenu && <Card className="w-72">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Фильтры новостей</h3>
             
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Радиус поиска (метры)
+                Радиус поиска (киллометры)
               </label>
               <input
                 type="number"
-                value={searchPoint?.radius || 10000}
+                value={searchPoint?.radius || 1}
                 onChange={handleRadiusChange}
                 className="w-full p-1 border-solid border-2 border-emerald-400 rounded-md"
                 onClick={e => e.stopPropagation()}
               />
-              <span className="text-sm text-gray-500">{searchPoint?.radius || 10000} м</span>
             </div>
 
             <div>
@@ -99,26 +100,26 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint }) 
             </div>
 
             <div className="flex space-x-2">
-              <button
+              <Button
                 onClick={handleSelectPoint}
-                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                className={`bg-zinc-900 hover:bg-emerald-400 ${
                   isSelectingPoint
                     ? 'bg-green-600 text-white'
                     : 'bg-blue-600 text-white'
                 }`}
               >
                 {isSelectingPoint ? 'Выберите точку на карте' : 'Указать точку'}
-              </button>
+              </Button>
               
-              <button
+              <Button
                 onClick={handleClearFilters}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md"
+                className="text-gray-700 bg-gray-100"
               >
                 Сбросить
-              </button>
+              </Button>
             </div>
           </div>
-        </Card>
+        </Card>}
       </div>
     </>
   );

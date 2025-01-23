@@ -2,13 +2,17 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import dynamic from "next/dynamic";
-import { FaTh, FaLocationArrow } from "react-icons/fa";
-import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
+import { FaTh, FaLocationArrow, FaFilter } from "react-icons/fa";
+
 import NewsFilter from '@/components/map/NewsFilter';
-import MarkerData, { SearchPoint } from '@/types/MarkerData';
+import Button from '@/components/ui/Button';
+
 import api from '@/lib/api';
+import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
 
 import { NewsResponse } from '@/types/ApiTypes';
+import MarkerData, { SearchPoint } from '@/types/MarkerData';
+import { twMerge } from 'tailwind-merge';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
@@ -21,14 +25,16 @@ const Home: React.FC = () => {
 
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
-  const [showSidePanel, setShowSidePanel] = useState(true);
   const [center, setCenter] = useState([54.18753233082934, 35.17676568455171]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   
   const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
     savedLocation 
-      ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 10000 }
-      : { latitude: center[0], longitude: center[1], radius: 10000 }
+      ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 100 }
+      : { latitude: center[0], longitude: center[1], radius: 100 }
   );
 
   ////////////////////
@@ -39,7 +45,7 @@ const Home: React.FC = () => {
       setIsLoading(true);
       
       if (latitude && longitude && radius) {
-        const response = await api.getPointsInRadius(latitude, longitude, radius);
+        const response = await api.getPointsInRadius(latitude, longitude, radius*1000); // meters -> kilometers
         setMarkers(response.data);
       } else {
         setMarkers([]);
@@ -51,9 +57,9 @@ const Home: React.FC = () => {
     }
   };
 
-  ////////////////
-  // USE EFFECT //
-  ////////////////
+  ///////////////////////////
+  // SEARCH NEWS IN RADIUS //
+  ///////////////////////////
   useEffect(() => {
     if (searchPoint) {
       fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
@@ -73,8 +79,8 @@ const Home: React.FC = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           setCenter([latitude, longitude]);
-          saveUserLocation({ latitude, longitude, radius: 10000 });
-          // setSearchPoint({ latitude, longitude, radius: 10000 });
+          saveUserLocation({ latitude, longitude, radius: 100 });
+          setSearchPoint({ latitude, longitude, radius: 100 });
         },
         (error) => {
           console.error("Ошибка получения геолокации:", error);
@@ -88,6 +94,19 @@ const Home: React.FC = () => {
 
   const mapComponentRef = useRef<L.Map | null>(null);
 
+  // Add new function to calculate zoom level based on radius
+  const calculateZoomLevel = (radiusInKm: number): number => {
+    // Approximate zoom levels for different radiuses
+    if (radiusInKm <= 1) return 15;      // ~1km
+    if (radiusInKm <= 2) return 14;      // ~2km
+    if (radiusInKm <= 5) return 13;      // ~5km
+    if (radiusInKm <= 10) return 12;     // ~10km
+    if (radiusInKm <= 20) return 11;     // ~20km
+    if (radiusInKm <= 50) return 10;     // ~50km
+    if (radiusInKm <= 100) return 9;     // ~100km
+    return 8;                            // >100km
+  };
+
   //////////////////
   // MEMOIZED MAP //
   //////////////////
@@ -96,10 +115,10 @@ const Home: React.FC = () => {
       <MapWithNoSSR
         mapRef={mapComponentRef}
         center={center as [number, number]} 
-        zoom={14}
+        zoom={searchPoint ? calculateZoomLevel(searchPoint.radius) : 14}
         onMarkerClick={handleMarkerClick} 
       >
-        <NewsFilter setSearchPoint={setSearchPoint} searchPoint={searchPoint} />
+        <NewsFilter setSearchPoint={setSearchPoint} searchPoint={searchPoint} showFiltersMenu={showFilters} />
 
         {/* MARKERS */}
         {markers.map((marker) => (
@@ -131,7 +150,7 @@ const Home: React.FC = () => {
 
       </MapWithNoSSR>
     ), 
-    [center, markers, selectedNews, handleMarkerClick]
+    [center, markers, selectedNews, handleMarkerClick, searchPoint?.radius]
   );
 
   useEffect(() => {
@@ -145,31 +164,54 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col sm:flex-row h-screen">
-      <div className={`${showSidePanel ? 'hidden sm:block' : 'block'} w-full h-full sm:w-16 bg-gray-100 shadow-lg p-4 border-l z-10`}>
-        <h2 className="text-xl font-bold mb-4">NM</h2>
-      </div>
 
-      <div className={`relative w-full h-32 sm:h-auto sm:flex-1 transition-all`}> 
-        <div>
-          {displayMap}
-        </div>
+      {/* SIDE PANEL */}
+      <div className={twMerge(
+        "flex flex-row sm:flex-col w-full sm:w-16 bg-gray-100 shadow-lg p-4 border-l z-20",
+        showSidePanel && "h-full absolute sm:static sm:w-48"
+      )}>
+        <div className="flex flex-row sm:flex-col w-full sm:h-full justify-between items-center h-8">
+          <h2 className="text-xl font-bold text-zinc-800">NM</h2>
 
-        <div className="absolute top-2 right-2 z-20 flex gap-2">
-          <button 
-            className="bg-white text-black px-4 py-2 rounded hover:bg-emerald-300 transition-colors shadow-lg"
-            onClick={handleGeolocation}
-            title="Определить моё местоположение"
-          >
-            <FaLocationArrow/>
-          </button>
-
-          <button 
-            className="sm:hidden bg-white text-black px-4 py-2 rounded hover:bg-emerald-300 transition-colors shadow-lg"
+          <Button 
+            className={twMerge(
+              "px-2 py-2",
+              showSidePanel && "bg-transparent hover:bg-transparent hover:text-emerald-500 text-zinc-800 rounded-full py-2 w-auto sm:w-full"
+            )}
             onClick={() => setShowSidePanel(!showSidePanel)}
             title="Показать/скрыть меню"
           >
             <FaTh/>
-          </button>
+            <span className={`hidden ${showSidePanel? 'sm:block' : ''}`}>
+              {showSidePanel ? 'Скрыть' : ''}
+            </span>
+          </Button>
+        </div>
+      </div>
+
+      {/* MAP */}
+      <div className={`relative w-full h-32 sm:h-auto sm:flex-1`}> 
+        <div>
+          {displayMap}
+        </div>
+
+        {/* RIGHT BUTTONS */}
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 rounded-lg p-2">
+          <Button 
+            className="px-2 py-2"
+            onClick={handleGeolocation}
+            title="Определить моё местоположение"
+          >
+            <FaLocationArrow/>
+          </Button>
+
+          <Button 
+            className="px-2 py-2"
+            onClick={() => setShowFilters(!showFilters)}
+            title="Показать/скрыть фильтры"
+          >
+            <FaFilter/>
+          </Button>
         </div>
       </div>
     </div>
