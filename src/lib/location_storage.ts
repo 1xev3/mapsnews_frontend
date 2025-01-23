@@ -13,6 +13,10 @@ export const saveUserLocation = (location: UserLocation): void => {
 };
 
 export const getUserLocation = (): UserLocation | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
   const stored = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
   return stored ? JSON.parse(stored) : null;
 }; 

@@ -2,59 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import Card from '../ui/Card';
 import { saveUserLocation, getUserLocation } from '@/lib/location_storage';
-import { FaTh } from 'react-icons/fa';
+import { SearchPoint } from '@/types/MarkerData';
+import dynamic from "next/dynamic";
+const Circle = dynamic(() => import("react-leaflet").then(mod => mod.Circle), {ssr: false});
 
 interface NewsFilterProps {
-  onFilterChange: (filters: {
-    radius: number;
-    latitude?: number;
-    longitude?: number;
-  }) => void;
+  setSearchPoint: (point: SearchPoint | null) => void;
+  searchPoint: SearchPoint | null;
 }
 
-const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
-  const savedLocation = getUserLocation();
+const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint }) => {
 
-  const [radius, setRadius] = useState<number>(savedLocation?.radius || 10000);
-  const [point, setPoint] = useState<{lat: number; lng: number} | null>({
-    lat: savedLocation?.latitude || 0,
-    lng: savedLocation?.longitude || 0
-  });
+  
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
         if (isSelectingPoint) {
-          const newPoint = { lat: e.latlng.lat, lng: e.latlng.lng };
-          setPoint(newPoint);
+          setSearchPoint({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: searchPoint?.radius || 10000 });
+          saveUserLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: searchPoint?.radius || 10000 });
           setIsSelectingPoint(false);
-          saveUserLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: radius });
-          onFilterChange({
-            radius,
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-          });
         }
       },
     });
     return null;
   };
 
-  useEffect(() => {
-    if (point) {
-      onFilterChange({
-        radius,
-        latitude: point.lat,
-        longitude: point.lng,
-      });
-      saveUserLocation({ latitude: point.lat, longitude: point.lng, radius: radius });
-    }
-  }, [radius, point]);
-
   const handleRadiusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newRadius = Number(e.target.value);
-    setRadius(newRadius);
+    if (searchPoint) {
+      setSearchPoint({ ...searchPoint, radius: newRadius });
+      saveUserLocation({ latitude: searchPoint.latitude, longitude: searchPoint.longitude, radius: newRadius });
+    }
   };
 
   const handleSelectPoint = () => {
@@ -62,9 +42,8 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
   };
 
   const handleClearFilters = () => {
-    setPoint(null);
+    setSearchPoint(null);
     setIsSelectingPoint(false);
-    onFilterChange({ radius });
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -74,6 +53,16 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
   return (
     <>
       <MapClickHandler />
+
+      {/* CIRCLE */}
+      {searchPoint && (
+          <Circle
+            center={[searchPoint.latitude, searchPoint.longitude]}
+            radius={searchPoint.radius/1.6}
+            pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
+          />
+        )}
+        
       <div 
         className="absolute top-20 right-4 z-[1000] hidden sm:block"
         onClick={handleCardClick}
@@ -88,21 +77,21 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
               </label>
               <input
                 type="number"
-                value={radius}
+                value={searchPoint?.radius || 10000}
                 onChange={handleRadiusChange}
                 className="w-full p-1 border-solid border-2 border-emerald-400 rounded-md"
                 onClick={e => e.stopPropagation()}
               />
-              <span className="text-sm text-gray-500">{radius} м</span>
+              <span className="text-sm text-gray-500">{searchPoint?.radius || 10000} м</span>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Точка поиска
               </label>
-              {point ? (
+              {searchPoint ? (
                 <div className="text-sm text-gray-500">
-                  {point.lat.toFixed(6)}, {point.lng.toFixed(6)}
+                  {searchPoint.latitude.toFixed(6)}, {searchPoint.longitude.toFixed(6)}
                 </div>
               ) : (
                 <div className="text-sm text-gray-500">Точка не выбрана</div>
