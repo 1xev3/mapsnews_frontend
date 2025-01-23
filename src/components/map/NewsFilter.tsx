@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import Card from '../ui/Card';
-import { saveUserLocation } from '@/lib/location_storage';
+import { saveUserLocation, getUserLocation } from '@/lib/location_storage';
 import { FaTh } from 'react-icons/fa';
 
 interface NewsFilterProps {
@@ -13,8 +13,13 @@ interface NewsFilterProps {
 }
 
 const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
-  const [radius, setRadius] = useState<number>(10000);
-  const [point, setPoint] = useState<{lat: number; lng: number} | null>(null);
+  const savedLocation = getUserLocation();
+
+  const [radius, setRadius] = useState<number>(savedLocation?.radius || 10000);
+  const [point, setPoint] = useState<{lat: number; lng: number} | null>({
+    lat: savedLocation?.latitude || 0,
+    lng: savedLocation?.longitude || 0
+  });
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
   const MapClickHandler = () => {
@@ -24,7 +29,7 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
           const newPoint = { lat: e.latlng.lat, lng: e.latlng.lng };
           setPoint(newPoint);
           setIsSelectingPoint(false);
-          saveUserLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+          saveUserLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng, radius: radius });
           onFilterChange({
             radius,
             latitude: e.latlng.lat,
@@ -43,6 +48,7 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ onFilterChange }) => {
         latitude: point.lat,
         longitude: point.lng,
       });
+      saveUserLocation({ latitude: point.lat, longitude: point.lng, radius: radius });
     }
   }, [radius, point]);
 

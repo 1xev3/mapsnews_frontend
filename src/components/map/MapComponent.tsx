@@ -26,7 +26,7 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, on
   const savedLocation = getUserLocation();
   const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
     savedLocation 
-      ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: 10000 }
+      ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 10000 }
       : { latitude: center[0], longitude: center[1], radius: 10000 }
   );
   const [markers, setMarkers] = useState<MarkerData[]>([]);
@@ -47,9 +47,9 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, on
         const response = await api.getPointsInRadius(latitude, longitude, radius);
         setMarkers(response.data);
         // Center map on search point
-        if (map) {
-          map.setView([latitude, longitude], zoom);
-        }
+        // if (map) {
+        //   map.setView([latitude, longitude], zoom);
+        // }
       } else {
         setMarkers([]);
       }
@@ -102,7 +102,7 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, on
     }
   };
 
-  // IF NOT SSR //
+  // IF SSR //
   if (typeof window === 'undefined') {
     return <div>Loading...</div>;
   }

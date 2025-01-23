@@ -17,15 +17,18 @@ const Home: React.FC = () => {
     console.log('Clicked news:', news_uid);
   };
 
+  /////////////////////
+  // GEOLOCATION GET //
+  /////////////////////
   const handleGeolocation = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setCenter([latitude, longitude]);
-          // Сохраняем позицию пользователя
-          saveUserLocation({ latitude, longitude });
-          // Обновляем поисковую точку в фильтре
+          
+          saveUserLocation({ latitude, longitude, radius: 10000 });
+          
           if (mapComponentRef.current) {
             mapComponentRef.current.handleFilterChange({
               radius: 10000, // дефолтный радиус
@@ -46,6 +49,9 @@ const Home: React.FC = () => {
 
   const mapComponentRef = useRef<any>(null);
 
+  //////////////////
+  // MEMOIZED MAP //
+  //////////////////
   const displayMap = useMemo(
     () => (
       <MapWithNoSSR
@@ -59,7 +65,6 @@ const Home: React.FC = () => {
   );
 
   useEffect(() => {
-    // При монтировании компонента проверяем сохраненную локацию
     const savedLocation = getUserLocation();
     if (savedLocation) {
       setCenter([savedLocation.latitude, savedLocation.longitude]);

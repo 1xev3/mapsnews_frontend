@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
 interface UserLocation {
   latitude: number;
   longitude: number;
+  radius: number;
 }
 
 export const saveUserLocation = (location: UserLocation): void => {
