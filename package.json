@@ -14,8 +14,10 @@
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "leaflet-geosearch": "^4.0.0",
     "next": "15.1.4",
+    "prunecluster": "^2.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.4.0",
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
