@@ -1,0 +1,50 @@
+export interface NewsResponse {
+    title: string;
+    content: string;
+    id: number;
+    creator_id: string;
+    created_at: string;
+    geodata_id: number;
+}
+
+export interface GeoPointResponse {
+    id: string;
+    latitude: number;
+    longitude: number;
+}
+
+export interface ApiResponse<T> {
+    data: T;
+    status: number;
+    message?: string;
+}
+
+export interface LoginCredentials {
+    username: string;
+    password: string;
+}
+
+export interface NewsCreate {
+    title: string;
+    content: string;
+    latitude: number;
+    longitude: number;
+}
+
+export interface NewsUpdate {
+    title?: string;
+    content?: string;
+}
+
+export interface GeoPoint {
+    latitude: number;
+    longitude: number;
+}
+
+export interface User {
+    email: string;
+    nickname: string;
+    id: number;
+    is_active: boolean;
+    group_id: number;
+}

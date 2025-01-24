@@ -5,17 +5,20 @@ import { useMapEvents } from 'react-leaflet';
 import { saveUserLocation, getUserLocation } from '@/lib/location_storage';
 import { SearchPoint } from '@/types/MarkerData';
 const Circle = dynamic(() => import("react-leaflet").then(mod => mod.Circle), {ssr: false});
+const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
+
+import { FaMapMarkerAlt } from 'react-icons/fa';
 
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
-interface NewsFilterProps {
+interface NewsSearchPointProps {
   setSearchPoint: (point: SearchPoint | null) => void;
   searchPoint: SearchPoint | null;
   showFiltersMenu: boolean;
 }
 
-const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint, showFiltersMenu }) => {
+const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searchPoint, showFiltersMenu }) => {
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
   const MapClickHandler = () => {
@@ -58,12 +61,24 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint, sh
 
       {/* CIRCLE */}
       {searchPoint && (
+        <>
           <Circle
             center={[searchPoint.latitude, searchPoint.longitude]}
             radius={searchPoint.radius/1.6 * 1000} // meters -> kilometers
-            pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
+            pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.02 }}
+            interactive={false}
           />
-        )}
+          {/* <Marker
+            position={[searchPoint.latitude, searchPoint.longitude]}
+          /> */}
+          <Circle
+            center={[searchPoint.latitude, searchPoint.longitude]}
+            radius={20} // meters -> kilometers
+            pathOptions={{ color: 'blue', fillColor: 'transparent', fillOpacity: 0.1 }}
+            interactive={false}
+          />
+        </>
+      )}
         
       <div 
         className="absolute left-4 bottom-4 z-[1000]"
@@ -71,8 +86,6 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint, sh
       >
         {showFiltersMenu && <Card className="w-72">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Фильтры новостей</h3>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Радиус поиска (киллометры)
@@ -99,21 +112,22 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint, sh
               )}
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 justify-center">
               <Button
                 onClick={handleSelectPoint}
-                className={`bg-zinc-900 hover:bg-emerald-400 ${
+                className={`bg-zinc-900 rounded-full ${
                   isSelectingPoint
-                    ? 'bg-green-600 text-white'
-                    : 'bg-blue-600 text-white'
+                    ? 'bg-emerald-600 hover:bg-emerald-400 text-white'
+                    : 'bg-blue-600 hover:bg-blue-400 text-white'
                 }`}
               >
-                {isSelectingPoint ? 'Выберите точку на карте' : 'Указать точку'}
+                <FaMapMarkerAlt />
+                {isSelectingPoint ? 'Кликните на карту' : 'Указать точку'}
               </Button>
               
               <Button
                 onClick={handleClearFilters}
-                className="text-gray-700 bg-gray-100"
+                className="text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full"
               >
                 Сбросить
               </Button>
@@ -125,4 +139,4 @@ const NewsFilter: React.FC<NewsFilterProps> = ({ setSearchPoint, searchPoint, sh
   );
 };
 
-export default NewsFilter; 
+export default NewsSearchPoint; 

@@ -2,10 +2,11 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import dynamic from "next/dynamic";
-import { FaTh, FaLocationArrow, FaFilter } from "react-icons/fa";
+import { FaTh, FaLocationArrow, FaMapMarkerAlt } from "react-icons/fa";
 
-import NewsFilter from '@/components/map/NewsFilter';
+import NewsSearchPoint from '@/components/map/NewsSearchPoint';
 import Button from '@/components/ui/Button';
+import NavBar from './NavBar';
 
 import api from '@/lib/api';
 import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
@@ -117,8 +118,9 @@ const Home: React.FC = () => {
         center={center as [number, number]} 
         zoom={searchPoint ? calculateZoomLevel(searchPoint.radius) : 14}
         onMarkerClick={handleMarkerClick} 
+        mapType="m"
       >
-        <NewsFilter setSearchPoint={setSearchPoint} searchPoint={searchPoint} showFiltersMenu={showFilters} />
+        <NewsSearchPoint setSearchPoint={setSearchPoint} searchPoint={searchPoint} showFiltersMenu={showFilters} />
 
         {/* MARKERS */}
         {markers.map((marker) => (
@@ -163,42 +165,19 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col sm:flex-row h-screen">
+    <div className="flex flex-col h-screen">
 
-      {/* SIDE PANEL */}
-      <div className={twMerge(
-        "flex flex-row sm:flex-col w-full sm:w-16 bg-gray-100 shadow-lg p-4 border-l z-20",
-        showSidePanel && "h-full absolute sm:static sm:w-48"
-      )}>
-        <div className="flex flex-row sm:flex-col w-full sm:h-full justify-between items-center h-8">
-          <h2 className="text-xl font-bold text-zinc-800">NM</h2>
-
-          <Button 
-            className={twMerge(
-              "px-2 py-2",
-              showSidePanel && "bg-transparent hover:bg-transparent hover:text-emerald-500 text-zinc-800 rounded-full py-2 w-auto sm:w-full"
-            )}
-            onClick={() => setShowSidePanel(!showSidePanel)}
-            title="Показать/скрыть меню"
-          >
-            <FaTh/>
-            <span className={`hidden ${showSidePanel? 'sm:block' : ''}`}>
-              {showSidePanel ? 'Скрыть' : ''}
-            </span>
-          </Button>
-        </div>
-      </div>
+      {/* NAVBAR */}
+      <NavBar />
 
       {/* MAP */}
-      <div className={`relative w-full h-32 sm:h-auto sm:flex-1`}> 
-        <div>
-          {displayMap}
-        </div>
+      <div className={`relative w-full h-32 sm:h-auto flex-1`}> 
+        {displayMap}
 
         {/* RIGHT BUTTONS */}
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 rounded-lg p-2">
           <Button 
-            className="px-2 py-2"
+            className="px-2 py-2 rounded-full"
             onClick={handleGeolocation}
             title="Определить моё местоположение"
           >
@@ -206,11 +185,11 @@ const Home: React.FC = () => {
           </Button>
 
           <Button 
-            className="px-2 py-2"
+            className="px-2 py-2 rounded-full"
             onClick={() => setShowFilters(!showFilters)}
-            title="Показать/скрыть фильтры"
+            title="Радиус поиска"
           >
-            <FaFilter/>
+            <FaMapMarkerAlt />
           </Button>
         </div>
       </div>

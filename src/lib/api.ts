@@ -1,31 +1,5 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
-
-interface TokenPair {
-  access_token: string;
-  refresh_token: string;
-}
-
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-interface NewsCreate {
-  title: string;
-  content: string;
-  latitude: number;
-  longitude: number;
-}
-
-interface NewsUpdate {
-  title?: string;
-  content?: string;
-}
-
-interface GeoPoint {
-  latitude: number;
-  longitude: number;
-}
+import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User } from '@/types/ApiTypes';
+import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
 
 export class API {
   private static instance: API | null = null;
@@ -43,7 +17,8 @@ export class API {
 
     // Add interceptor to include token in requests
     this.axiosInstance.interceptors.request.use(
-      (config) => {
+      async (config) => {
+        await this.refreshTokenIfNeeded();
         if (this.accessToken) {
           config.headers.Authorization = `Bearer ${this.accessToken}`;
         }
@@ -58,11 +33,14 @@ export class API {
       async (error: AxiosError) => {
         const originalRequest = error.config;
         
-        // Check if error is 401 and it's not a refresh token request
-        if (error.response?.status === 401 && 
+        // Check if error is 401/403, it's not a refresh token request, and request hasn't been retried yet
+        if ((error.response?.status === 401 || error.response?.status === 403) && 
             originalRequest && 
-            originalRequest.url !== '/auth/refresh') {
+            originalRequest.url !== '/auth/refresh' &&
+            !(originalRequest as any)._retry) { // Add retry flag check
           try {
+            (originalRequest as any)._retry = true; // Mark request as retried
+            
             // Get new access token using httpOnly refresh token cookie
             const response = await this.axiosInstance.post<{ access_token: string }>('/auth/refresh');
             const newAccessToken = response.data.access_token;
@@ -71,14 +49,14 @@ export class API {
             this.setAccessToken(newAccessToken);
             
             // Retry the original request with new token
-            if (originalRequest.headers) {
+            if (originalRequest && originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              return this.axiosInstance(originalRequest as AxiosRequestConfig);
             }
-            return this.axiosInstance(originalRequest);
+            return Promise.reject(error);
           } catch (refreshError) {
             // If refresh fails, clear access token and redirect to login
             this.clearAccessToken();
-            // You might want to trigger a redirect to login page here
             throw refreshError;
           }
         }
@@ -195,7 +173,7 @@ export class API {
   }
 
   // User Service endpoints
-  public async getCurrentUser() {
+  public async getCurrentUser(): Promise<AxiosResponse<User>> {
     return this.axiosInstance.get('/users/me');
   }
 
@@ -213,6 +191,25 @@ export class API {
     });
 
     return this.axiosInstance.get(`/users/all?${params}`);
+  }
+
+  private isTokenExpired(token: string): boolean {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiry = payload.exp;
+    const now = Math.floor(Date.now() / 1000);
+    return now >= expiry;
+  }
+
+  private async refreshTokenIfNeeded(): Promise<void> {
+    if (this.accessToken && this.isTokenExpired(this.accessToken)) {
+      try {
+        const response = await this.axiosInstance.post<{ access_token: string }>('/auth/refresh');
+        this.setAccessToken(response.data.access_token);
+      } catch (error) {
+        this.clearAccessToken();
+        throw new Error('Failed to refresh token');
+      }
+    }
   }
 }
 
