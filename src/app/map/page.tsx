@@ -145,10 +145,9 @@ const Home: React.FC = () => {
             <Popup>
               {selectedNews ? (
                 <div className="text-teal-500">
-                  <h3 className="font-bold">{selectedNews.title}</h3>
-                  <p className="text-sm mt-1">{selectedNews.content}</p>
+                  <h3 className="font-bold text-xl">{selectedNews.title}</h3>
                   <p className="text-xs mt-2 text-gray-500">
-                    {/* {new Date(selectedNews.created_at).toLocaleDateString()} */}
+                    {new Date(selectedNews.created_at).toLocaleDateString()}
                   </p>
                 </div>
               ) : (
@@ -182,7 +181,7 @@ const Home: React.FC = () => {
 
       {/* MAP */}
       <div className={`flex-1 flex flex-col sm:flex-row pt-14`}> 
-        <div className="relative w-full h-3/4 sm:h-full min-h-96">
+        <div className={`relative w-full ${selectedNews ? 'h-3/4' : 'h-full'} sm:h-full min-h-96`}>
           <div className="w-full h-full">
             {displayMap}
           </div>
@@ -209,7 +208,7 @@ const Home: React.FC = () => {
 
         {/* SIDEBAR */}
         {selectedNews && (
-          <NewsContainer className='p-4' news={selectedNews} />
+          <NewsContainer className='w-full sm:min-w-96 sm:w-96 lg:w-1/4 p-2 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto break-words' news={selectedNews} />
         )}
       </div>
     </div>

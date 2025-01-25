@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { NewsResponse, User } from '@/types/ApiTypes';
 import Markdown from 'react-markdown';
+import { twMerge } from 'tailwind-merge';
 
 interface NewsContainerProps {
   news: NewsResponse;
@@ -21,7 +22,7 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className }) => {
   }, []);
 
   return (
-    <div className={className}>
+    <div className={twMerge('p-4', className)}>
       <h1 className='text-2xl font-bold'>{news.title}</h1>
       <span className='text-sm text-gray-500'>{owner ? "@"+owner.nickname : 'loading...'}</span>
       <span className='text-sm text-gray-500 ml-2'>{
