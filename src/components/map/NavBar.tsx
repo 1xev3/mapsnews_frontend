@@ -41,6 +41,7 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
   useEffect(() => {
     api.getCurrentUser().then((res) => {
       setUser(res.data)
+      // console.log(res.data)
     }).catch((err) => {
       console.log(err) //not logged in
     })

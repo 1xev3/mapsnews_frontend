@@ -175,7 +175,7 @@ export class API {
 
   // User Service endpoints
   public async getCurrentUser(): Promise<AxiosResponse<User>> {
-    return this.axiosInstance.get('/users/me');
+    return this.axiosInstance.get('/users/me', { timeout: 5000 });
   }
 
   public async updateCurrentUser(nickname?: string, password?: string) {
@@ -199,20 +199,32 @@ export class API {
   }
 
   private isTokenExpired(token: string): boolean {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const expiry = payload.exp;
-    const now = Math.floor(Date.now() / 1000);
-    return now >= expiry;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp;
+      const now = Math.floor(Date.now() / 1000);
+      return now >= (expiry - 30);
+    } catch {
+      return true;
+    }
   }
 
   private async refreshTokenIfNeeded(): Promise<void> {
+    const cookies = document.cookie.split(';');
+    const hasRefreshToken = cookies.some(cookie => cookie.trim().startsWith('refresh_token='));
+    
+    if (!hasRefreshToken) {
+      this.clearAccessToken();
+      return;
+    }
+
     if (this.accessToken && this.isTokenExpired(this.accessToken)) {
       try {
         const response = await this.axiosInstance.post<{ access_token: string }>('/auth/refresh');
         this.setAccessToken(response.data.access_token);
       } catch (error) {
         this.clearAccessToken();
-        throw new Error('Failed to refresh token');
+        return;
       }
     }
   }

@@ -42,30 +42,28 @@ const Home: React.FC = () => {
   // FETCH MARKERS //
   ///////////////////
   const fetchMarkers = async (latitude?: number, longitude?: number, radius?: number) => {
-    try {
-      setIsLoading(true);
-      
-      if (latitude && longitude && radius) {
-        const response = await api.getPointsInRadius(latitude, longitude, radius*1000); // meters -> kilometers
-        setMarkers(response.data);
-      } else {
-        setMarkers([]);
-      }
-    } catch (err) {
-      console.error('Error fetching markers:', err);
-    } finally {
-      setIsLoading(false);
+    if (!latitude || !longitude || !radius) {
+      setMarkers([]);
+      return;
     }
+
+    setIsLoading(true);
+    
+    api.getPointsInRadius(latitude, longitude, radius*1000).then((response) => {
+      setMarkers(response.data);
+    }).finally(() => {
+      setIsLoading(false);
+    }); // meters -> kilometers
   };
 
   ///////////////////////////
   // SEARCH NEWS IN RADIUS //
   ///////////////////////////
-  useEffect(() => {
-    if (searchPoint) {
-      fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
-    }
-  }, [searchPoint]);
+  // useEffect(() => {
+  //   if (searchPoint) {
+  //     fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
+  //   }
+  // }, [searchPoint]);
 
   const handleMarkerClick = (geo_id: string) => {
     api.getNewsByGeoIDs([geo_id]).then((response) => {

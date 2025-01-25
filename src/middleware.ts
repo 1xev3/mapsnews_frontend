@@ -3,28 +3,31 @@ import type { NextRequest } from 'next/server';
 
 // List of public routes that don't require authentication
 const publicRoutes = ['/map'];
+const authRoutes = ['/login'];
 
 export function middleware(request: NextRequest) {
   const isAuthenticated = request.cookies.has('refresh_token');
-  const isAuthPage = request.nextUrl.pathname === '/login';
+  const isAuthPage = authRoutes.includes(request.nextUrl.pathname);
   const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname);
+  
+  // Всегда пропускаем API запросы
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
 
-  // Store the original URL in case we need to redirect back after login
-  const returnTo = request.nextUrl.pathname + request.nextUrl.search;
-
-  // Allow access to public routes
+  // Пропускаем публичные маршруты
   if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // Redirect to login if not authenticated and trying to access protected route
+  // Если пользователь не аутентифицирован и пытается получить доступ к защищенному маршруту
   if (!isAuthenticated && !isAuthPage) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('returnTo', returnTo);
+    loginUrl.searchParams.set('returnTo', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to returnTo or default page if authenticated user tries to access login
+  // Если пользователь аутентифицирован и пытается получить доступ к странице входа
   if (isAuthenticated && isAuthPage) {
     const returnTo = request.nextUrl.searchParams.get('returnTo') || '/map';
     return NextResponse.redirect(new URL(returnTo, request.url));
@@ -35,7 +38,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Add routes that need authentication or special handling
+    '/((?!_next/static|favicon.ico|public).*)',
     '/login',
     '/profile',
     '/admin/:path*',
