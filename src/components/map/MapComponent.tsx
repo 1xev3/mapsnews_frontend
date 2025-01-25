@@ -43,16 +43,23 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, on
       center={center}
       zoom={zoom}
       scrollWheelZoom={true}
-      style={{ height: '100vh', width: '100%' }}
+      style={{ height: '100%', width: '100%' }}
       zoomControl={false}
       ref={setMap}
     >
-      {/* Standard OSM map layer */}
+      {/* Google OSM map layer */}
       <TileLayer
         url={`http://{s}.google.com/vt?lyrs=${mapType}&x={x}&y={y}&z={z}`}
         subdomains={['mt0','mt1','mt2','mt3']}
         zIndex={1}
       />
+
+      {/* 2GIS map layer */}
+      {/* <TileLayer
+        url={`http://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}`}
+        zIndex={1}
+      /> */}
+
 
       {children}
 

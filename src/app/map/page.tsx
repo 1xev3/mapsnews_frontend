@@ -84,7 +84,7 @@ const Home: React.FC = () => {
           setSearchPoint({ latitude, longitude, radius: 100 });
         },
         (error) => {
-          console.error("Ошибка получения геолокации:", error);
+          console.log("Ошибка получения геолокации:", error);
           alert("Не удалось определить ваше местоположение");
         }
       );
@@ -171,26 +171,40 @@ const Home: React.FC = () => {
       <NavBar />
 
       {/* MAP */}
-      <div className={`relative w-full h-32 sm:h-auto flex-1`}> 
-        {displayMap}
+      <div className={`flex-1 flex flex-col sm:flex-row`}> 
+        <div className="relative w-full h-3/4 sm:h-full min-h-64">
+          <div className="w-full h-full">
+            {displayMap}
+          </div>
 
-        {/* RIGHT BUTTONS */}
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 rounded-lg p-2">
-          <Button 
-            className="px-2 py-2 rounded-full"
-            onClick={handleGeolocation}
-            title="Определить моё местоположение"
-          >
-            <FaLocationArrow/>
-          </Button>
+          {/* RIGHT BUTTONS */}
+          <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 rounded-lg p-2">
+            <Button 
+              className="px-2 py-2 rounded-full"
+              onClick={handleGeolocation}
+              title="Определить моё местоположение"
+            >
+              <FaLocationArrow/>
+            </Button>
 
-          <Button 
-            className="px-2 py-2 rounded-full"
-            onClick={() => setShowFilters(!showFilters)}
-            title="Радиус поиска"
-          >
-            <FaMapMarkerAlt />
-          </Button>
+            <Button 
+              className="px-2 py-2 rounded-full"
+              onClick={() => setShowFilters(!showFilters)}
+              title="Радиус поиска"
+            >
+              <FaMapMarkerAlt />
+            </Button>
+          </div>
+        </div>
+
+        {/* SIDEBAR */}
+        <div className='w-full min-w-96 sm:w-96 lg:w-1/4 p-2 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto border-l'>
+          <h2 className='text-2xl font-bold'>News.name</h2>
+          <p className='text-sm text-gray-500'>News.description</p>
+          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
         </div>
       </div>
     </div>

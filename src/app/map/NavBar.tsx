@@ -7,10 +7,10 @@ import Link from "next/link"
 
 //bg-gradient-to-r from-emerald-200 to-teal-300
 const hotBarBaseClasses = `
-  h-14 px-4 py-2 w-full
+  sticky top-0
+  h-14 px-4 py-2 w-full px-10
   flex items-center justify-between
   bg-black
-  border-b-2 border-gray-300
   z-50
 `
 
@@ -69,10 +69,6 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
           >
             <FaTh className={buttonIconClasses} />
             <span className={buttonLabelClasses}>Меню</span>
-            
-            {isMenuOpen && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full" />
-            )}
           </Button>
 
           <Button
@@ -84,10 +80,6 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
             <span className={`${buttonLabelClasses} truncate max-w-[80px]`}>
               {user?.nickname || 'Профиль'}
             </span>
-            
-            {isUserMenuOpen && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full" />
-            )}
           </Button>
         </div>
       </div>
@@ -110,13 +102,6 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
               Выйти из аккаунта
             </button>
           )}
-        </div>
-      )}
-
-      {/* Main Menu */}
-      {isMenuOpen && (
-        <div className="fixed bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-4">
-          {children}
         </div>
       )}
     </>
