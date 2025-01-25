@@ -7,7 +7,7 @@ import Link from "next/link"
 
 //bg-gradient-to-r from-emerald-200 to-teal-300
 const hotBarBaseClasses = `
-  sticky top-0
+  fixed top-0
   h-14 px-4 py-2 w-full px-10
   flex items-center justify-between
   bg-black

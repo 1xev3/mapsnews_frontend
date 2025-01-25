@@ -171,8 +171,8 @@ const Home: React.FC = () => {
       <NavBar />
 
       {/* MAP */}
-      <div className={`flex-1 flex flex-col sm:flex-row`}> 
-        <div className="relative w-full h-3/4 sm:h-full min-h-64">
+      <div className={`flex-1 flex flex-col sm:flex-row pt-14`}> 
+        <div className="relative w-full h-3/4 sm:h-full min-h-96">
           <div className="w-full h-full">
             {displayMap}
           </div>
