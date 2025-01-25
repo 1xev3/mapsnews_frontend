@@ -59,11 +59,11 @@ const Home: React.FC = () => {
   ///////////////////////////
   // SEARCH NEWS IN RADIUS //
   ///////////////////////////
-  // useEffect(() => {
-  //   if (searchPoint) {
-  //     fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
-  //   }
-  // }, [searchPoint]);
+  useEffect(() => {
+    if (searchPoint) {
+      fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
+    }
+  }, [searchPoint]);
 
   const handleMarkerClick = (geo_id: string) => {
     api.getNewsByGeoIDs([geo_id]).then((response) => {
