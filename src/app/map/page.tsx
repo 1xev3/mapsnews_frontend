@@ -2,26 +2,26 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import dynamic from "next/dynamic";
-import { FaTh, FaLocationArrow, FaMapMarkerAlt } from "react-icons/fa";
+import { FaLocationArrow, FaMapMarkerAlt } from "react-icons/fa";
 
 import NewsSearchPoint from '@/components/map/NewsSearchPoint';
 import Button from '@/components/ui/Button';
-import NavBar from './NavBar';
+import NavBar from '@/components/map/NavBar';
 
 import api from '@/lib/api';
 import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
 
 import { NewsResponse } from '@/types/ApiTypes';
 import MarkerData, { SearchPoint } from '@/types/MarkerData';
-import { twMerge } from 'tailwind-merge';
+import NewsContainer from '@/components/news/NewsContainer';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), {ssr: false});
 
-const Home: React.FC = () => {
-  // Dynamic imports for Leaflet components
 
+
+const Home: React.FC = () => {
   const savedLocation = getUserLocation();
 
   const [markers, setMarkers] = useState<MarkerData[]>([]);
@@ -67,8 +67,17 @@ const Home: React.FC = () => {
     }
   }, [searchPoint]);
 
-  const handleMarkerClick = (news_uid: string) => {
-    console.log('Clicked news:', news_uid);
+  const handleMarkerClick = (geo_id: string) => {
+    api.getNewsByGeoIDs([geo_id]).then((response) => {
+      if (response.data.length > 0) {
+        console.log('response.data', response.data);
+        setSelectedNews(response.data[0]);
+      } else {
+        setSelectedNews(null);
+      }
+    }).catch((error) => {
+      console.error('Error fetching news:', error);
+    });
   };
 
   /////////////////////
@@ -131,6 +140,7 @@ const Home: React.FC = () => {
               click: () => handleMarkerClick(marker.id)
             }}
             zIndexOffset={1000}
+            riseOnHover={true}
           >
             <Popup>
               {selectedNews ? (
@@ -138,7 +148,7 @@ const Home: React.FC = () => {
                   <h3 className="font-bold">{selectedNews.title}</h3>
                   <p className="text-sm mt-1">{selectedNews.content}</p>
                   <p className="text-xs mt-2 text-gray-500">
-                    {new Date(selectedNews.created_at).toLocaleDateString()}
+                    {/* {new Date(selectedNews.created_at).toLocaleDateString()} */}
                   </p>
                 </div>
               ) : (
@@ -198,14 +208,9 @@ const Home: React.FC = () => {
         </div>
 
         {/* SIDEBAR */}
-        <div className='w-full min-w-96 sm:w-96 lg:w-1/4 p-2 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto border-l'>
-          <h2 className='text-2xl font-bold'>News.name</h2>
-          <p className='text-sm text-gray-500'>News.description</p>
-          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-          <p className='text-3xl text-gray-500'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        </div>
+        {selectedNews && (
+          <NewsContainer className='p-4' news={selectedNews} />
+        )}
       </div>
     </div>
   );

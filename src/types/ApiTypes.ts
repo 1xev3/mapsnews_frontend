@@ -2,7 +2,7 @@ export interface NewsResponse {
     title: string;
     content: string;
     id: number;
-    creator_id: string;
+    creator_id: number;
     created_at: string;
     geodata_id: number;
 }

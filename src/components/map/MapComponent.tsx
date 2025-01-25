@@ -27,8 +27,8 @@ interface MapComponentProps {
   children?: React.ReactNode;
 }
 
-const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, onMarkerClick, children, mapType = "m" }) => {
-  const [map, setMap] = useState<L.Map | null>(null);
+const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, onMarkerClick, mapRef, children, mapType = "m" }) => {
+  // const [map, setMap] = useState<L.Map | null>(null);
 
   // IF SSR //
   if (typeof window === 'undefined') {
@@ -45,7 +45,7 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, on
       scrollWheelZoom={true}
       style={{ height: '100%', width: '100%' }}
       zoomControl={false}
-      ref={setMap}
+      ref={mapRef}
     >
       {/* Google OSM map layer */}
       <TileLayer

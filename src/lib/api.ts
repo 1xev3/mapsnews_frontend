@@ -56,6 +56,7 @@ export class API {
             return Promise.reject(error);
           } catch (refreshError) {
             // If refresh fails, clear access token and redirect to login
+            console.log(refreshError);
             this.clearAccessToken();
             throw refreshError;
           }
@@ -184,13 +185,17 @@ export class API {
     });
   }
 
-  public async getAllUsers(skip = 0, limit = 100) {
+  public async getAllUsers(skip = 0, limit = 100): Promise<AxiosResponse<User[]>> {
     const params = new URLSearchParams({
       skip: skip.toString(),
       limit: limit.toString(),
     });
 
     return this.axiosInstance.get(`/users/all?${params}`);
+  }
+
+  public async getUserByID(user_id: number): Promise<AxiosResponse<User>> {
+    return this.axiosInstance.get(`/users/all/${user_id}`);
   }
 
   private isTokenExpired(token: string): boolean {
