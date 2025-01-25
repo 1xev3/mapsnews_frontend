@@ -208,7 +208,7 @@ const Home: React.FC = () => {
 
         {/* SIDEBAR */}
         {selectedNews && (
-          <NewsContainer className='w-full sm:min-w-96 sm:w-96 lg:w-1/4 p-2 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto break-words' news={selectedNews} />
+          <NewsContainer className='w-full sm:min-w-96 sm:w-96 lg:w-1/4 p-4 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto break-words' news={selectedNews} />
         )}
       </div>
     </div>
