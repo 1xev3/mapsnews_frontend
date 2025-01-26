@@ -14,6 +14,7 @@ import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
 import { NewsResponse } from '@/types/ApiTypes';
 import MarkerData, { SearchPoint } from '@/types/MarkerData';
 import NewsContainer from '@/components/news/NewsContainer';
+import { toast, ToastContainer } from 'react-toastify';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
@@ -27,11 +28,7 @@ const Home: React.FC = () => {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
   const [center, setCenter] = useState([54.18753233082934, 35.17676568455171]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [showSidePanel, setShowSidePanel] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  
   const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
     savedLocation 
       ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 100 }
@@ -46,14 +43,13 @@ const Home: React.FC = () => {
       setMarkers([]);
       return;
     }
-
-    setIsLoading(true);
     
     api.getPointsInRadius(latitude, longitude, radius*1000).then((response) => {
       setMarkers(response.data);
-    }).finally(() => {
-      setIsLoading(false);
-    }); // meters -> kilometers
+    }).catch((error) => {
+      toast.error('Ошибка получения маркеров');
+      console.log('Error fetching markers:', error);
+    });
   };
 
   ///////////////////////////
@@ -75,6 +71,7 @@ const Home: React.FC = () => {
       }
     }).catch((error) => {
       console.error('Error fetching news:', error);
+      toast.error('Ошибка получения новостей');
     });
   };
 
@@ -92,11 +89,11 @@ const Home: React.FC = () => {
         },
         (error) => {
           console.log("Ошибка получения геолокации:", error);
-          alert("Не удалось определить ваше местоположение");
+          toast.error("Не удалось определить ваше местоположение");
         }
       );
     } else {
-      alert("Геолокация не поддерживается вашим браузером");
+      toast.error("Геолокация не поддерживается вашим браузером");
     }
   };
 
@@ -166,13 +163,17 @@ const Home: React.FC = () => {
     const savedLocation = getUserLocation();
     if (savedLocation) {
       setCenter([savedLocation.latitude, savedLocation.longitude]);
-    } else {
-      handleGeolocation();
     }
   }, []);
 
   return (
     <div className="flex flex-col h-screen">
+
+      <ToastContainer
+        position="bottom-left"
+        autoClose={2000}
+        theme="dark"
+      />
 
       {/* NAVBAR */}
       <NavBar />

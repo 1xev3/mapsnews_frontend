@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
+import { useUser } from '@/lib/user_context';
 
 const LoginForm: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setUser } = useUser();
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
@@ -21,7 +23,10 @@ const LoginForm: React.FC = () => {
 
     try {
       await api.login(credentials);
-      // Get returnTo from URL parameters or default to /map
+      // Получаем данные пользователя после успешного логина
+      const userResponse = await api.getCurrentUser();
+      setUser(userResponse.data);
+      
       const returnTo = searchParams.get('returnTo') || '/map';
       router.push(returnTo);
     } catch (err) {

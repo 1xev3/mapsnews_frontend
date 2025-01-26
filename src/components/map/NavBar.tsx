@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import api from "@/lib/api"
 import { User } from "@/types/ApiTypes"
 import Link from "next/link"
+import { useUser } from "@/lib/user_context"
 
 //bg-gradient-to-r from-emerald-200 to-teal-300
 const hotBarBaseClasses = `
@@ -34,24 +35,19 @@ interface NavBarProps {
 }
 
 export const NavBar: React.FC<NavBarProps> = ({ children }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    api.getCurrentUser().then((res) => {
-      setUser(res.data)
-      // console.log(res.data)
-    }).catch((err) => {
-      console.log(err) //not logged in
-    })
-  }, [])
+  const { user, logout } = useUser();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    await api.logout()
-    setUser(null)
-    setIsUserMenuOpen(false)
-  }
+    try {
+      await logout();
+      setIsUserMenuOpen(false);
+    } catch (error) {
+      // Можно добавить обработку ошибок, например через toast
+      console.error('Ошибка при выходе:', error);
+    }
+  };
 
   return (
     <>
@@ -99,7 +95,7 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
             <button
               onClick={handleLogout}
               className="w-full px-4 py-1 text-left text-sm text-red-600 hover:bg-gray-100 rounded-lg"
-          >
+            >
               Выйти из аккаунта
             </button>
           )}
