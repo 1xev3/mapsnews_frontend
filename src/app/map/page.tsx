@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import dynamic from "next/dynamic";
-import { FaLocationArrow, FaMapMarkerAlt } from "react-icons/fa";
+import { FaFilter, FaMapMarkerAlt, FaPlus } from "react-icons/fa";
 
 import NewsSearchPoint from '@/components/map/NewsSearchPoint';
 import Button from '@/components/ui/Button';
@@ -15,6 +15,7 @@ import { NewsResponse } from '@/types/ApiTypes';
 import MarkerData, { SearchPoint } from '@/types/MarkerData';
 import NewsContainer from '@/components/news/NewsContainer';
 import { toast, ToastContainer } from 'react-toastify';
+import Link from 'next/link';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
@@ -28,7 +29,7 @@ const Home: React.FC = () => {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
   const [center, setCenter] = useState([54.18753233082934, 35.17676568455171]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showSearchPointMenu, setShowSearchPointMenu] = useState(false);
   const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
     savedLocation 
       ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 100 }
@@ -78,25 +79,6 @@ const Home: React.FC = () => {
   /////////////////////
   // GEOLOCATION GET //
   /////////////////////
-  const handleGeolocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCenter([latitude, longitude]);
-          saveUserLocation({ latitude, longitude, radius: 100 });
-          setSearchPoint({ latitude, longitude, radius: 100 });
-        },
-        (error) => {
-          console.log("Ошибка получения геолокации:", error);
-          toast.error("Не удалось определить ваше местоположение");
-        }
-      );
-    } else {
-      toast.error("Геолокация не поддерживается вашим браузером");
-    }
-  };
-
   const mapComponentRef = useRef<L.Map | null>(null);
 
   // Add new function to calculate zoom level based on radius
@@ -121,10 +103,14 @@ const Home: React.FC = () => {
         mapRef={mapComponentRef}
         center={center as [number, number]} 
         zoom={searchPoint ? calculateZoomLevel(searchPoint.radius) : 14}
-        onMarkerClick={handleMarkerClick} 
         mapType="m"
       >
-        <NewsSearchPoint setSearchPoint={setSearchPoint} searchPoint={searchPoint} showFiltersMenu={showFilters} />
+        <NewsSearchPoint 
+          setSearchPoint={setSearchPoint} 
+          searchPoint={searchPoint} 
+          showPointMenu={showSearchPointMenu} 
+          setShowPointMenu={setShowSearchPointMenu} 
+        />
 
         {/* MARKERS */}
         {markers.map((marker) => (
@@ -139,8 +125,8 @@ const Home: React.FC = () => {
           >
             <Popup>
               {selectedNews ? (
-                <div className="text-teal-500">
-                  <h3 className="font-bold text-xl">{selectedNews.title}</h3>
+                <div className="break-words">
+                  <h3 className="text-teal-500 font-bold text-md">{selectedNews.title}</h3>
                   <p className="text-xs mt-2 text-gray-500">
                     {new Date(selectedNews.created_at).toLocaleDateString()}
                   </p>
@@ -158,6 +144,19 @@ const Home: React.FC = () => {
     ), 
     [center, markers, selectedNews, handleMarkerClick, searchPoint?.radius]
   );
+
+  const getCenter = () => {
+    console.log('mapComponentRef.current?.getCenter()', mapComponentRef.current?.getCenter());
+    return mapComponentRef.current?.getCenter();
+  }
+
+  const handleCreateNewsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const currentCenter = getCenter();
+    if (currentCenter) {
+      window.location.href = `/news/create?lat=${currentCenter.lat}&lng=${currentCenter.lng}`;
+    }
+  };
 
   useEffect(() => {
     const savedLocation = getUserLocation();
@@ -186,21 +185,34 @@ const Home: React.FC = () => {
           </div>
 
           {/* RIGHT BUTTONS */}
-          <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 rounded-lg p-2">
-            <Button 
-              className="px-2 py-2 rounded-full"
-              onClick={handleGeolocation}
-              title="Определить моё местоположение"
+          <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-lg p-2 items-end">
+            {/* CREATE NEWS BUTTON */}
+            <Link 
+              className="w-fit px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex flex-row items-center justify-center gap-2"
+              href={`/news/create`}
+              onClick={handleCreateNewsClick}
             >
-              <FaLocationArrow/>
-            </Button>
+              <FaPlus />
+              <span className="text-xs hidden sm:block">Создать новость</span>
+            </Link>
 
+            {/* SEARCH POINT BUTTON */}
             <Button 
-              className="px-2 py-2 rounded-full"
-              onClick={() => setShowFilters(!showFilters)}
+              className="w-fit px-3 py-2 rounded-full"
+              onClick={() => setShowSearchPointMenu(!showSearchPointMenu)}
               title="Радиус поиска"
             >
               <FaMapMarkerAlt />
+              <span className="text-xs hidden sm:block">Точка поиска</span>
+            </Button>
+
+            {/* FILTERS BUTTON */}
+            <Button 
+              className="w-fit px-3 py-2 rounded-full"
+              title="Радиус поиска"
+            >
+              <FaFilter />
+              <span className="text-xs hidden sm:block">Фильтры</span>
             </Button>
           </div>
         </div>

@@ -7,18 +7,20 @@ import { SearchPoint } from '@/types/MarkerData';
 const Circle = dynamic(() => import("react-leaflet").then(mod => mod.Circle), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
 
-import { FaMapMarkerAlt } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
 
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { toast } from 'react-toastify';
 
 interface NewsSearchPointProps {
   setSearchPoint: (point: SearchPoint | null) => void;
   searchPoint: SearchPoint | null;
-  showFiltersMenu: boolean;
+  showPointMenu: boolean;
+  setShowPointMenu: (show: boolean) => void;
 }
 
-const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searchPoint, showFiltersMenu }) => {
+const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searchPoint, showPointMenu, setShowPointMenu }) => {
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
   const MapClickHandler = () => {
@@ -55,6 +57,24 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
     e.stopPropagation();
   };
 
+  const handleGeolocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          saveUserLocation({ latitude, longitude, radius: 100 });
+          setSearchPoint({ latitude, longitude, radius: 100 });
+        },
+        (error) => {
+          console.log("Ошибка получения геолокации:", error);
+          toast.error("Не удалось определить ваше местоположение");
+        }
+      );
+    } else {
+      toast.error("Геолокация не поддерживается вашим браузером");
+    }
+  };
+
   return (
     <>
       <MapClickHandler />
@@ -81,26 +101,33 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
       )}
         
       <div 
-        className="absolute left-4 bottom-4 z-[1000]"
+        className="absolute right-4 bottom-4 z-[1000]"
         onClick={handleCardClick}
       >
-        {showFiltersMenu && <Card className="w-72">
+        {showPointMenu && <Card className="w-96 bg-gray-900 text-white border-2 border-gray-600">
+          <button
+            className="absolute top-2 right-2 p-1 text-white hover:text-red-500"
+            onClick={() => setShowPointMenu(false)}
+          >
+            <FaTimes />
+          </button>
+
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-white">
                 Радиус поиска (киллометры)
               </label>
               <input
                 type="number"
                 value={searchPoint?.radius || 1}
                 onChange={handleRadiusChange}
-                className="w-full p-1 border-solid border-2 border-emerald-400 rounded-md"
+                className="w-full p-1 border-solid border-2 border-gray-600 rounded-md bg-gray-900 text-white"
                 onClick={e => e.stopPropagation()}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-white">
                 Точка поиска
               </label>
               {searchPoint ? (
@@ -115,19 +142,27 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
             <div className="flex space-x-2 justify-center">
               <Button
                 onClick={handleSelectPoint}
-                className={`bg-zinc-900 rounded-full ${
+                className={`bg-zinc-900 rounded-full  ${
                   isSelectingPoint
                     ? 'bg-emerald-600 hover:bg-emerald-400 text-white'
                     : 'bg-blue-600 hover:bg-blue-400 text-white'
                 }`}
               >
                 <FaMapMarkerAlt />
-                {isSelectingPoint ? 'Кликните на карту' : 'Указать точку'}
+                {isSelectingPoint ? 'Кликните на карту' : 'Указать'}
+              </Button>
+
+              <Button
+                onClick={handleGeolocation}
+                className="text-white bg-gray-900 hover:bg-gray-800 rounded-full border-2 border-gray-600"
+              >
+                <FaMapMarkerAlt />
+                Геолокация
               </Button>
               
               <Button
                 onClick={handleClearFilters}
-                className="text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full"
+                className="text-white bg-gray-900 hover:bg-gray-800 rounded-full border-2 border-gray-600"
               >
                 Сбросить
               </Button>

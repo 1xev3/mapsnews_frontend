@@ -1,5 +1,6 @@
 // components/Card.tsx
 import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
 interface CardProps {
   children: React.ReactNode;
@@ -8,7 +9,7 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ children, className }) => {
   return (
-    <div className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg ${className}`}>
+    <div className={twMerge('bg-white p-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg', className)}>
       {children}
     </div>
   );

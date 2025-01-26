@@ -21,13 +21,12 @@ import "./MapComponent.css"
 interface MapComponentProps {
   center: [number, number];
   zoom: number;
-  onMarkerClick: (news_uid: string) => void;
   mapRef?: React.RefObject<any>;
   mapType: "h" | "m" | "p" | "r" | "s" | "t" | "y";
   children?: React.ReactNode;
 }
 
-const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, onMarkerClick, mapRef, children, mapType = "m" }) => {
+const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, mapRef, children, mapType = "m" }) => {
   // const [map, setMap] = useState<L.Map | null>(null);
 
   // IF SSR //

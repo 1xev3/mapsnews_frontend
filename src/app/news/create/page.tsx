@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import NavBar from '@/components/map/NavBar';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -21,13 +21,17 @@ const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {s
 
 const CreateNewsPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialLat = parseFloat(searchParams.get('lat') || '55.75') || 55.75;
+  const initialLng = parseFloat(searchParams.get('lng') || '37.61') || 37.61;
+  
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([55.75, 37.61]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([initialLat, initialLng]);
   const mapRef = useRef<any>(null);
 
   const MapClickHandler = () => {
@@ -157,7 +161,6 @@ const CreateNewsPage = () => {
                     center={mapCenter}
                     zoom={10}
                     mapType="m"
-                    onMarkerClick={() => {}}
                   >
                     <MapClickHandler />
                     {location && (
