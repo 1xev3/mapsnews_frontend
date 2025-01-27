@@ -8,6 +8,8 @@ interface DropdownProps {
     selfContent?: React.ReactNode;
     children: React.ReactNode;
     childrenClassName?: string;
+    isOpened: boolean;
+    setIsOpened: (isOpened: boolean) => void;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -16,15 +18,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
     showIcon = true,
     selfContent = false,
     children,
-    childrenClassName = ''
+    childrenClassName = '',
+    isOpened = false,
+    setIsOpened = () => {}
 }) => {
-    const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
+                setIsOpened(false);
             }
         };
 
@@ -39,7 +42,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         >
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => setIsOpened(!isOpened)}
                 className={twMerge(
                     "w-full px-4 py-2 text-left bg-white",
                     "rounded-md shadow-sm text-sm",
@@ -48,13 +51,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
             >
                 {selfContent ? selfContent : placeholder}
                 {showIcon && (
-                    <span className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                    <span className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-transform ${isOpened ? 'rotate-180' : ''}`}>
                         ▼
                     </span>
                 )}
             </button>
 
-            {isOpen && (
+            {isOpened && (
                 <div className={twMerge(
                     "absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto",
                     childrenClassName

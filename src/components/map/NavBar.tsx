@@ -36,7 +36,6 @@ interface NavBarProps {
 
 export const NavBar: React.FC<NavBarProps> = ({ children }) => {
   const { user, logout } = useUser();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -44,7 +43,6 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
       await logout();
       setIsUserMenuOpen(false);
     } catch (error) {
-      // Можно добавить обработку ошибок, например через toast
       console.error('Ошибка при выходе:', error);
     }
   };
@@ -63,6 +61,8 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
               className="border-2 border-gray-700 bg-black rounded-full text-white hover:bg-gray-800"
               childrenClassName="right-0 w-fit"
               showIcon={false}
+              isOpened={isUserMenuOpen}
+              setIsOpened={setIsUserMenuOpen}
               selfContent={
                 <span className="flex items-center gap-2">
                   <FaUser className={buttonIconClasses} />
