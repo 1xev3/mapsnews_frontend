@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import dynamic from "next/dynamic";
+import { useSearchParams } from 'next/navigation';
 import { FaFilter, FaMapMarkerAlt, FaPlus } from "react-icons/fa";
 
 import NewsSearchPoint from '@/components/map/NewsSearchPoint';
@@ -16,22 +17,55 @@ import MarkerData, { SearchPoint } from '@/types/MarkerData';
 import NewsContainer from '@/components/news/NewsContainer';
 
 import { toast, ToastContainer } from 'react-toastify';
-import Modal from 'react-modal';
-Modal.setAppElement('#root');
 import Link from 'next/link';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), {ssr: false});
 
+// Debounce helper function
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
+// Add new function to calculate zoom level based on radius
+const calculateZoomLevel = (radiusInKm: number): number => {
+  // Approximate zoom levels for different radiuses
+  if (radiusInKm <= 1) return 15;      // ~1km
+  if (radiusInKm <= 2) return 14;      // ~2km
+  if (radiusInKm <= 5) return 13;      // ~5km
+  if (radiusInKm <= 10) return 12;     // ~10km
+  if (radiusInKm <= 20) return 11;     // ~20km
+  if (radiusInKm <= 50) return 10;     // ~50km
+  if (radiusInKm <= 100) return 9;     // ~100km
+  return 8;                            // >100km
+};
 
 
+
+///////////////
+// COMPONENT //
+///////////////
 const Home: React.FC = () => {
   const savedLocation = getUserLocation();
 
+  const searchParams = useSearchParams();
+  const urlLat = searchParams.get('lat');
+  const urlLng = searchParams.get('lng');
+  const urlZoom = searchParams.get('zoom');
+
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
-  const [center, setCenter] = useState([54.18753233082934, 35.17676568455171]);
+  const [center, setCenter] = useState(
+    urlLat && urlLng 
+      ? [parseFloat(urlLat), parseFloat(urlLng)]
+      : [savedLocation?.latitude || 54.18753233082934, savedLocation?.longitude || 35.17676568455171]
+  );
+  const [zoom, setZoom] = useState(urlZoom ? parseInt(urlZoom) : 14);
   const [showSearchPointMenu, setShowSearchPointMenu] = useState(false);
   const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
     savedLocation 
@@ -56,15 +90,9 @@ const Home: React.FC = () => {
     });
   };
 
-  ///////////////////////////
-  // SEARCH NEWS IN RADIUS //
-  ///////////////////////////
-  useEffect(() => {
-    if (searchPoint) {
-      fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
-    }
-  }, [searchPoint]);
-
+  /////////////////////////
+  // HANDLE MARKER CLICK //
+  /////////////////////////
   const handleMarkerClick = (geo_id: string) => {
     api.getNewsByGeoIDs([geo_id]).then((response) => {
       if (response.data.length > 0) {
@@ -79,34 +107,65 @@ const Home: React.FC = () => {
     });
   };
 
-  /////////////////////
-  // GEOLOCATION GET //
-  /////////////////////
-  const mapComponentRef = useRef<L.Map | null>(null);
+  ///////////////////////////
+  // SEARCH NEWS IN RADIUS //
+  ///////////////////////////
+  useEffect(() => {
+    if (searchPoint) {
+      fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
+    }
+  }, [searchPoint]);
 
-  // Add new function to calculate zoom level based on radius
-  const calculateZoomLevel = (radiusInKm: number): number => {
-    // Approximate zoom levels for different radiuses
-    if (radiusInKm <= 1) return 15;      // ~1km
-    if (radiusInKm <= 2) return 14;      // ~2km
-    if (radiusInKm <= 5) return 13;      // ~5km
-    if (radiusInKm <= 10) return 12;     // ~10km
-    if (radiusInKm <= 20) return 11;     // ~20km
-    if (radiusInKm <= 50) return 10;     // ~50km
-    if (radiusInKm <= 100) return 9;     // ~100km
-    return 8;                            // >100km
+
+  //////////////
+  // HANDLERS //
+  //////////////
+  const getCenter = () => {
+    return mapComponentRef.current?.getCenter();
+  }
+
+  const handleCreateNewsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const currentCenter = getCenter();
+    if (currentCenter) {
+      window.location.href = `/news/create?lat=${currentCenter.lat}&lng=${currentCenter.lng}`;
+    }
   };
+
+  const handleGeoPointClick = (latitude: number, longitude: number) => {
+    setZoom(14);
+    setCenter([latitude, longitude]);
+  };
+
+  const handleMapMove = useCallback(debounce(() => {
+    const map = mapComponentRef.current;
+    if (map) {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      const newUrl = `/map?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&zoom=${zoom}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, 300), []); // 300ms delay
+
+
+  // Update map view when center or zoom changes
+  useEffect(() => {
+    mapComponentRef.current?.setView(center as [number, number], zoom ? zoom : calculateZoomLevel(searchPoint?.radius || 100));
+  }, [center, zoom]);
+
 
   //////////////////
   // MEMOIZED MAP //
   //////////////////
+  const mapComponentRef = useRef<L.Map | null>(null);
   const displayMap = useMemo(
     () => (
       <MapWithNoSSR
         mapRef={mapComponentRef}
         center={center as [number, number]} 
-        zoom={searchPoint ? calculateZoomLevel(searchPoint.radius) : 14}
+        zoom={zoom}
         mapType="m"
+        onMoveEnd={handleMapMove}
       >
         <NewsSearchPoint 
           setSearchPoint={setSearchPoint} 
@@ -125,49 +184,29 @@ const Home: React.FC = () => {
             }}
             zIndexOffset={1000}
             riseOnHover={true}
+            title={selectedNews?.title || ''}
           >
-            <Popup>
-              {selectedNews ? (
+            <Popup> 
+              {selectedNews && 
                 <div className="break-words">
                   <h3 className="text-teal-500 font-bold text-md">{selectedNews.title}</h3>
                   <p className="text-xs mt-2 text-gray-500">
                     {new Date(selectedNews.created_at).toLocaleDateString()}
                   </p>
                 </div>
-              ) : (
-                <div className="text-gray-500">
-                  Loading...
-                </div>
-              )}
+              }
             </Popup>
+            
           </Marker>
         ))}
 
       </MapWithNoSSR>
     ), 
-    [center, markers, selectedNews, handleMarkerClick, searchPoint?.radius]
+    [center, markers, selectedNews, handleMarkerClick, searchPoint?.radius, zoom]
   );
 
-  const getCenter = () => {
-    console.log('mapComponentRef.current?.getCenter()', mapComponentRef.current?.getCenter());
-    return mapComponentRef.current?.getCenter();
-  }
 
-  const handleCreateNewsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const currentCenter = getCenter();
-    if (currentCenter) {
-      window.location.href = `/news/create?lat=${currentCenter.lat}&lng=${currentCenter.lng}`;
-    }
-  };
-
-  useEffect(() => {
-    const savedLocation = getUserLocation();
-    if (savedLocation) {
-      setCenter([savedLocation.latitude, savedLocation.longitude]);
-    }
-  }, []);
-
+  // render
   return (
     <div className="flex flex-col h-screen">
 
@@ -222,7 +261,12 @@ const Home: React.FC = () => {
 
         {/* SIDEBAR */}
         {selectedNews && (
-          <NewsContainer className='w-full sm:min-w-96 sm:w-96 lg:w-1/4 p-4 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto break-words' news={selectedNews} />
+          <NewsContainer 
+            className='w-full sm:min-w-96 sm:w-96 lg:w-1/4 p-4 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto break-words' 
+            news={selectedNews}
+            onGeoPointClick={handleGeoPointClick}
+            onClose={() => setSelectedNews(null)}
+          />
         )}
       </div>
     </div>

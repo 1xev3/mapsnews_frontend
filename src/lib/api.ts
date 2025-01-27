@@ -1,4 +1,4 @@
-import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User } from '@/types/ApiTypes';
+import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse } from '@/types/ApiTypes';
 import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
 
 export class API {
@@ -156,6 +156,10 @@ export class API {
   // Geo Service endpoints
   public async createGeoPoint(point: GeoPoint) {
     return this.axiosInstance.post('/points', point);
+  }
+
+  public async getGeoPointByID(pointId: string): Promise<AxiosResponse<GeoPointResponse>> {
+    return this.axiosInstance.get(`/points/id/${pointId}`);
   }
 
   public async getPointsInRadius(latitude: number, longitude: number, radius: number) {

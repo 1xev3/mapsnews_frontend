@@ -1,8 +1,8 @@
 "use client"
 
 // components/MapComponent.tsx
-import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import React from 'react';
+import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 import "leaflet-defaulticon-compatibility";
@@ -24,9 +24,22 @@ interface MapComponentProps {
   mapRef?: React.RefObject<any>;
   mapType: "h" | "m" | "p" | "r" | "s" | "t" | "y";
   children?: React.ReactNode;
+  onMoveEnd?: () => void;
 }
 
-const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, mapRef, children, mapType = "m" }) => {
+// Event handler component
+const MapEventHandler: React.FC<{ onMoveEnd?: () => void }> = ({ onMoveEnd }) => {
+  useMapEvents({
+    moveend: () => {
+      if (onMoveEnd) {
+        onMoveEnd();
+      }
+    },
+  });
+  return null;
+};
+
+const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, mapRef, children, mapType = "m", onMoveEnd }) => {
   // const [map, setMap] = useState<L.Map | null>(null);
 
   // IF SSR //
@@ -46,6 +59,9 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, ma
       zoomControl={false}
       ref={mapRef}
     >
+      {/* Event Handler */}
+      <MapEventHandler onMoveEnd={onMoveEnd} />
+
       {/* Google OSM map layer */}
       <TileLayer
         url={`http://{s}.google.com/vt?lyrs=${mapType}&x={x}&y={y}&z={z}`}
