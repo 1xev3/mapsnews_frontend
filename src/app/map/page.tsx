@@ -14,7 +14,10 @@ import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
 import { NewsResponse } from '@/types/ApiTypes';
 import MarkerData, { SearchPoint } from '@/types/MarkerData';
 import NewsContainer from '@/components/news/NewsContainer';
+
 import { toast, ToastContainer } from 'react-toastify';
+import Modal from 'react-modal';
+Modal.setAppElement('#root');
 import Link from 'next/link';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});

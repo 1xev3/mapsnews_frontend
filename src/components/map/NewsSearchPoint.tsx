@@ -20,6 +20,8 @@ interface NewsSearchPointProps {
   setShowPointMenu: (show: boolean) => void;
 }
 
+const ButtonStyle = 'text-black rounded-full border-2 bg-white border-gray-600 hover:bg-gray-200';
+
 const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searchPoint, showPointMenu, setShowPointMenu }) => {
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
@@ -104,9 +106,9 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
         className="absolute right-4 bottom-4 z-[1000]"
         onClick={handleCardClick}
       >
-        {showPointMenu && <Card className="w-96 bg-gray-900 text-white border-2 border-gray-600">
+        {showPointMenu && <Card className="w-96 text-black border-2">
           <button
-            className="absolute top-2 right-2 p-1 text-white hover:text-red-500"
+            className="absolute top-2 right-2 p-1 hover:text-red-500"
             onClick={() => setShowPointMenu(false)}
           >
             <FaTimes />
@@ -114,20 +116,20 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-white">
+              <label className="block text-sm font-medium">
                 Радиус поиска (киллометры)
               </label>
               <input
                 type="number"
                 value={searchPoint?.radius || 1}
                 onChange={handleRadiusChange}
-                className="w-full p-1 border-solid border-2 border-gray-600 rounded-md bg-gray-900 text-white"
+                className="w-full p-1 border-solid border-2 rounded-md"
                 onClick={e => e.stopPropagation()}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white">
+              <label className="block text-sm font-medium">
                 Точка поиска
               </label>
               {searchPoint ? (
@@ -144,8 +146,8 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
                 onClick={handleSelectPoint}
                 className={`bg-zinc-900 rounded-full  ${
                   isSelectingPoint
-                    ? 'bg-emerald-600 hover:bg-emerald-400 text-white'
-                    : 'bg-blue-600 hover:bg-blue-400 text-white'
+                    ? 'bg-emerald-600 hover:bg-emerald-400'
+                    : 'bg-black hover:bg-gray-800'
                 }`}
               >
                 <FaMapMarkerAlt />
@@ -154,7 +156,7 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
 
               <Button
                 onClick={handleGeolocation}
-                className="text-white bg-gray-900 hover:bg-gray-800 rounded-full border-2 border-gray-600"
+                className={ButtonStyle}
               >
                 <FaMapMarkerAlt />
                 Геолокация
@@ -162,7 +164,7 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
               
               <Button
                 onClick={handleClearFilters}
-                className="text-white bg-gray-900 hover:bg-gray-800 rounded-full border-2 border-gray-600"
+                className={ButtonStyle}
               >
                 Сбросить
               </Button>
