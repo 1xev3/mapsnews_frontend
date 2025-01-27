@@ -1,10 +1,10 @@
+import { useEffect, useState } from "react"
+
 import { FaTh, FaUser } from "react-icons/fa"
 import Button from "@/components/ui/Button"
-import { useEffect, useState } from "react"
-import api from "@/lib/api"
-import { User } from "@/types/ApiTypes"
-import Link from "next/link"
+import { Dropdown } from "@/components/ui/Dropdown"
 import { useUser } from "@/lib/user_context"
+import Link from "next/link"
 
 //bg-gradient-to-r from-emerald-200 to-teal-300
 const hotBarBaseClasses = `
@@ -27,7 +27,7 @@ const actionButtonClasses = `
   gap-0
 `
 
-const buttonIconClasses = "w-5 h-5 mb-1"
+const buttonIconClasses = "w-4 h-4"
 const buttonLabelClasses = "text-xs font-medium opacity-90"
 
 interface NavBarProps {
@@ -59,30 +59,40 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
 
         {/* Actions */}
         <div className="flex items-center">
-          <Button
-            variant="ghost"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={actionButtonClasses}
+          <Dropdown placeholder={user?.nickname || '...'} 
+              className="border-2 border-gray-700 bg-black rounded-full text-white hover:bg-gray-800"
+              childrenClassName="right-0 w-fit"
+              showIcon={false}
+              selfContent={
+                <span className="flex items-center gap-2">
+                  <FaUser className={buttonIconClasses} />
+                  <span className={buttonLabelClasses}>
+                    {user?.nickname || 'Аккаунт'}
+                  </span>
+                </span>
+              }
           >
-            <FaTh className={buttonIconClasses} />
-            <span className={buttonLabelClasses}>Меню</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className={actionButtonClasses}
-          >
-            <FaUser className={buttonIconClasses} />
-            <span className={`${buttonLabelClasses} truncate max-w-[80px]`}>
-              {user?.nickname || 'Профиль'}
-            </span>
-          </Button>
+            <Link 
+              href={user ? "/profile" : "/login?returnTo=/map"} 
+              onClick={() => setIsUserMenuOpen(false)}
+              className="block w-full px-4 py-1 text-sm text-left hover:bg-gray-100 rounded-lg"
+            >
+              {user ? "Открыть профиль" : "Войти"}
+            </Link>
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="w-full text-nowrap px-4 py-1 text-left text-sm text-red-600 hover:bg-gray-100 rounded-lg"
+              >
+                Выйти из аккаунта
+              </button>
+            )}
+          </Dropdown>
         </div>
       </div>
 
       {/* User Menu */}
-      {isUserMenuOpen && (
+      {/* {isUserMenuOpen && (
         <div className="fixed top-12 right-0 bg-white rounded-lg shadow-2xl p-2 m-2 min-w-[200px] z-50">
           <Link 
             href={user ? "/profile" : "/login?returnTo=/map"} 
@@ -100,7 +110,7 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
             </button>
           )}
         </div>
-      )}
+      )} */}
     </>
   )
 }
