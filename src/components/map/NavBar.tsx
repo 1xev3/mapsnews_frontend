@@ -6,7 +6,7 @@ import { Dropdown } from "@/components/ui/Dropdown"
 import { useUser } from "@/lib/user_context"
 import Link from "next/link"
 
-//bg-gradient-to-r from-emerald-200 to-teal-300
+//bg-linear-to-r from-emerald-200 to-teal-300
 const hotBarBaseClasses = `
   fixed top-0
   h-14 px-4 py-2 w-full px-10

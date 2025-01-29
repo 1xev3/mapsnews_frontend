@@ -103,7 +103,7 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
       )}
         
       <div 
-        className="absolute right-4 bottom-4 z-[1000]"
+        className="absolute right-4 bottom-4 z-1000"
         onClick={handleCardClick}
       >
         {showPointMenu && <Card className="w-96 text-black border-2">

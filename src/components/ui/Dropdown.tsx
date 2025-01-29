@@ -45,7 +45,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 onClick={() => setIsOpened(!isOpened)}
                 className={twMerge(
                     "w-full px-4 py-2 text-left bg-white",
-                    "rounded-md shadow-sm text-sm",
+                    "rounded-md shadow-xs text-sm",
                     className
                 )}
             >
