@@ -8,9 +8,10 @@ import { FaFilter, FaMapMarkerAlt, FaPlus } from "react-icons/fa";
 import NewsSearchPoint from '@/components/map/NewsSearchPoint';
 import Button from '@/components/ui/Button';
 import NavBar from '@/components/map/NavBar';
+import FiltersMenu from '@/components/map/FiltersMenu';
 
 import api from '@/lib/api';
-import { getUserLocation, saveUserLocation } from '@/lib/location_storage';
+import { getUserLocation, saveUserLocation } from '@/lib/news_data_storage';
 
 import { NewsResponse } from '@/types/ApiTypes';
 import MarkerData, { SearchPoint } from '@/types/MarkerData';
@@ -60,9 +61,11 @@ const Home: React.FC = () => {
 
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
+  const [timeFilter, setTimeFilter] = useState<number | null>(null);
   const [center, setCenter] = useState(
     urlLat && urlLng 
       ? [parseFloat(urlLat), parseFloat(urlLng)]
+
       : [savedLocation?.latitude || 54.18753233082934, savedLocation?.longitude || 35.17676568455171]
   );
   const [zoom, setZoom] = useState(urlZoom ? parseInt(urlZoom) : 14);
@@ -72,6 +75,7 @@ const Home: React.FC = () => {
       ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 100 }
       : { latitude: center[0], longitude: center[1], radius: 100 }
   );
+  const [showFiltersMenu, setShowFiltersMenu] = useState(false);
 
   ////////////////////
   // FETCH MARKERS //
@@ -81,13 +85,27 @@ const Home: React.FC = () => {
       setMarkers([]);
       return;
     }
-    
-    api.getPointsInRadius(latitude, longitude, radius*1000).then((response) => {
-      setMarkers(response.data);
+
+    const startDate: Date | null = timeFilter ? new Date(Date.now() - timeFilter * 60 * 60 * 1000) : null;
+    const endDate: Date | null = timeFilter ? new Date() : null;
+
+    api.getNewsInRadius(
+      latitude, 
+      longitude, 
+      radius*1000, 
+      startDate,
+      endDate
+    ).then((response) => {
+      setMarkers(response.data.map((news) => ({
+        id: news.id.toString(),
+        longitude: news.longitude,
+        latitude: news.latitude,
+      })));
     }).catch((error) => {
       toast.error('Ошибка получения маркеров');
       console.log('Error fetching markers:', error);
     });
+
   };
 
   /////////////////////////
@@ -100,6 +118,7 @@ const Home: React.FC = () => {
         setSelectedNews(response.data[0]);
       } else {
         setSelectedNews(null);
+
       }
     }).catch((error) => {
       console.error('Error fetching news:', error);
@@ -114,7 +133,7 @@ const Home: React.FC = () => {
     if (searchPoint) {
       fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
     }
-  }, [searchPoint]);
+  }, [searchPoint, timeFilter]);
 
 
   //////////////
@@ -128,7 +147,7 @@ const Home: React.FC = () => {
     e.preventDefault();
     const currentCenter = getCenter();
     if (currentCenter) {
-      window.location.href = `/news/create?lat=${currentCenter.lat}&lng=${currentCenter.lng}`;
+      window.location.href = `/news/create?lat=${currentCenter.lat.toFixed(6)}&lng=${currentCenter.lng.toFixed(6)}`;
     }
   };
 
@@ -205,6 +224,12 @@ const Home: React.FC = () => {
     [center, markers, selectedNews, handleMarkerClick, searchPoint?.radius, zoom]
   );
 
+  const handleTimeFilterChange = (hours: number) => {
+    // Here you can implement the logic to filter news by time
+    setTimeFilter(hours);
+    console.log(`Filtering news for last ${hours} hours`);
+    // You might want to add timeFilter to your API call parameters
+  };
 
   // render
   return (
@@ -249,13 +274,21 @@ const Home: React.FC = () => {
             </Button>
 
             {/* FILTERS BUTTON */}
-            <Button 
-              className="w-fit px-3 py-2 rounded-full"
-              title="Радиус поиска"
-            >
-              <FaFilter />
-              <span className="text-xs hidden sm:block">Фильтры</span>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button 
+                className="w-fit px-3 py-2 rounded-full"
+                onClick={() => setShowFiltersMenu(!showFiltersMenu)}
+                title="Фильтры"
+              >
+                <FaFilter />
+                <span className="text-xs hidden sm:block">Фильтры</span>
+              </Button>
+              <FiltersMenu
+                isOpened={showFiltersMenu}
+                setIsOpened={setShowFiltersMenu}
+                onTimeFilterChange={handleTimeFilterChange}
+              />
+            </div>
           </div>
         </div>
 

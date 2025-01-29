@@ -1,5 +1,6 @@
 const STORAGE_KEYS = {
   USER_LOCATION: 'user_location',
+  TIME_FILTER: 'time_filter',
 } as const;
 
 interface UserLocation {
@@ -18,5 +19,23 @@ export const getUserLocation = (): UserLocation | null => {
   }
 
   const stored = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
+  return stored ? JSON.parse(stored) : null;
+};
+
+export interface TimeFilter {
+  label: string;
+  hours: number;
+}
+
+export const saveTimeFilter = (filter: TimeFilter): void => {
+  localStorage.setItem(STORAGE_KEYS.TIME_FILTER, JSON.stringify(filter));
+};
+
+export const getTimeFilter = (): TimeFilter | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const stored = localStorage.getItem(STORAGE_KEYS.TIME_FILTER);
   return stored ? JSON.parse(stored) : null;
 }; 

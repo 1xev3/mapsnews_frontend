@@ -7,7 +7,13 @@ export interface NewsResponse {
     geodata_id: number;
 }
 
+export interface NewsResponseWithGeoPoint extends NewsResponse {
+    latitude: number;
+    longitude: number;
+}
+
 export interface GeoPointResponse {
+
     id: string;
     latitude: number;
     longitude: number;

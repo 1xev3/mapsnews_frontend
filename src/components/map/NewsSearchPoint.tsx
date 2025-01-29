@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import dynamic from "next/dynamic";
 
 import { useMapEvents } from 'react-leaflet';
-import { saveUserLocation, getUserLocation } from '@/lib/location_storage';
+import { saveUserLocation, getUserLocation } from '@/lib/news_data_storage';
 import { SearchPoint } from '@/types/MarkerData';
 const Circle = dynamic(() => import("react-leaflet").then(mod => mod.Circle), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});

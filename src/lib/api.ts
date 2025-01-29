@@ -1,4 +1,4 @@
-import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse } from '@/types/ApiTypes';
+import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse, NewsResponseWithGeoPoint } from '@/types/ApiTypes';
 import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
 
 export class API {
@@ -170,6 +170,27 @@ export class API {
     });
 
     return this.axiosInstance.get(`/points/radius?${params}`);
+  }
+
+  public async getNewsInRadius(
+    latitude: number, 
+    longitude: number, 
+    radius: number, 
+    startDate?: Date | null, 
+    endDate?: Date | null
+
+  ): Promise<AxiosResponse<NewsResponseWithGeoPoint[]>> {
+
+    const params = new URLSearchParams({
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      radius: radius.toString(),
+      ...(startDate && { start_date: startDate.toISOString() }),
+      ...(endDate && { end_date: endDate.toISOString() }),
+    });
+
+
+    return this.axiosInstance.get(`/news-by-radius?${params}`);
   }
 
   // User Service endpoints
