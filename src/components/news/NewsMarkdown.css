@@ -1,0 +1,78 @@
+@import "tailwindcss/theme" theme(reference);
+
+.markdown h2 {
+  @apply text-xl font-bold py-1 pt-2;
+}
+
+.markdown h3 {
+  @apply text-lg font-bold;
+}
+
+.markdown p {
+  @apply text-base;
+}
+
+.markdown a {
+  @apply text-blue-500;
+}
+
+.markdown ul {
+  @apply list-disc list-inside;
+}
+
+.markdown ol {
+  @apply list-decimal list-inside;
+}
+
+.markdown li {
+  @apply mb-2;
+}
+
+.markdown blockquote {
+  @apply border-l-4 border-gray-300 pl-4 py-2 my-4 break-all;
+}
+
+.markdown pre {
+  @apply bg-gray-100 p-2 rounded-md overflow-x-auto;
+}
+
+/* Styling for Webkit browsers (Chrome, Safari, etc.) */
+.markdown pre::-webkit-scrollbar {
+  height: 8px;
+  border-radius: 4px;
+}
+  
+.markdown pre::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+.markdown pre::-webkit-scrollbar-thumb {
+  background-color: #CBD5E0;
+  border-radius: 4px;
+}
+
+.markdown img {
+  @apply max-w-full h-auto;
+}
+
+.markdown table {
+  @apply w-full border-collapse border border-gray-300;
+}
+
+.markdown th, .markdown td {
+  @apply p-2 border border-gray-300;
+}
+
+.markdown th {
+  @apply bg-gray-100;
+}
+
+.markdown blockquote p {
+  @apply mb-0;
+}
+
+.markdown blockquote a {
+  @apply text-blue-500;
+}
+

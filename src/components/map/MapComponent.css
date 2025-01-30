@@ -37,51 +37,6 @@
   pointer-events: auto !important;
 }
 
-/* Стили для кластеров PruneCluster */
-.marker-cluster {
-  background-clip: padding-box;
-  border-radius: 20px;
-}
-
-.cluster-small {
-  background-color: rgba(181, 226, 140, 0.8);
-  color: #fff;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  border: 2px solid rgba(110, 204, 57, 0.8);
-}
-
-.cluster-medium {
-  background-color: rgba(241, 211, 87, 0.8);
-  color: #fff;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  border: 2px solid rgba(240, 194, 12, 0.8);
-}
-
-.cluster-large {
-  background-color: rgba(253, 156, 115, 0.8);
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  border: 2px solid rgba(241, 128, 23, 0.8);
-}
-
 .custom-marker {
   width: 25px;
   height: 41px;

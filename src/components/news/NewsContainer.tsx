@@ -10,6 +10,9 @@ import { toast } from 'react-toastify';
 import Button from '../ui/Button';
 import { useRouter } from 'next/navigation';
 import { FaEllipsisH, FaTimes, FaMapMarkerAlt } from 'react-icons/fa';
+import remarkGfm from 'remark-gfm'
+
+import './NewsMarkdown.css';
 
 interface NewsContainerProps {
   news: NewsResponse;
@@ -85,7 +88,12 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
           <FaEllipsisH />
         </Button>
       </div>
-      <Markdown className='w-full mt-4'>{news.content}</Markdown>
+      <Markdown 
+        components={{
+          h1: 'h2',
+        }}
+        remarkPlugins={[remarkGfm]}
+        className='w-full mt-4 markdown'>{`${news.content}`}</Markdown>
     </div>
   );
 };

@@ -4,6 +4,10 @@ export default interface MarkerData {
     latitude: number;
 }
 
+export interface MarkerDataWithTitle extends MarkerData {
+    title: string;
+}
+
 export interface SearchPoint extends Omit<MarkerData, 'id'> {
     radius: number;
 }

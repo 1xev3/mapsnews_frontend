@@ -15,7 +15,12 @@ export class API {
       withCredentials: true,
     });
 
-    // Add request interceptor to attach access token
+    this.initializeRequestInterceptor();
+    this.initializeResponseInterceptor();
+  }
+
+  // Initialize request interceptor to attach access token
+  private initializeRequestInterceptor() {
     this.axiosInstance.interceptors.request.use(
       (config) => {
         if (this.accessToken) {
@@ -25,20 +30,24 @@ export class API {
       },
       (error) => Promise.reject(error)
     );
+  }
 
-    // Add response interceptor to handle token refresh
+  // Initialize response interceptor to handle token refresh
+  private initializeResponseInterceptor() {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
         
-        if ((error.response?.status === 401 || error.response?.status === 403) && 
-            !originalRequest._retry && 
-            originalRequest.url !== '/auth/refresh') { // Prevent refresh loop
+        if (
+          (error.response?.status === 401 || error.response?.status === 403) &&
+          !originalRequest._retry &&
+          originalRequest.url !== '/auth/refresh'
+        ) {
           originalRequest._retry = true;
           
           try {
-            console.log("Refreshing token")
+            console.log("Refreshing token");
             const response = await this.axiosInstance.post<{ access_token: string }>(
               '/auth/refresh',
               {},
@@ -61,13 +70,12 @@ export class API {
     );
   }
 
-  // Static method to get instance
+  // Static method to get singleton instance
   public static getInstance(): API {
     if (!API.instance) {
       const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5010';
       API.instance = new API(baseURL);
       
-      // Only load tokens if we're in the browser
       if (typeof window !== 'undefined') {
         API.instance.loadTokensFromStorage();
       }
@@ -75,25 +83,24 @@ export class API {
     return API.instance;
   }
 
-  // Token management methods
+  // Set access token and store it if in browser
   private setAccessToken(token: string): void {
     this.accessToken = token;
-    // Only store in localStorage if we're in the browser
     if (typeof window !== 'undefined') {
       localStorage.setItem('access_token', token);
     }
   }
 
+  // Clear access token and remove it from storage if in browser
   private clearAccessToken(): void {
     this.accessToken = null;
-    // Only clear localStorage if we're in the browser
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token');
     }
   }
 
+  // Load tokens from localStorage if available
   public loadTokensFromStorage(): void {
-    // Only access localStorage if we're in the browser
     if (typeof window !== 'undefined') {
       const accessToken = localStorage.getItem('access_token');
       if (accessToken) {
@@ -102,7 +109,7 @@ export class API {
     }
   }
 
-  // Authentication
+  // Authentication Methods
   public async login(credentials: LoginCredentials): Promise<void> {
     const formData = new FormData();
     formData.append('username', credentials.username);
@@ -121,9 +128,9 @@ export class API {
     }
   }
 
-  // News Service endpoints
-  public async getNews(skip = 0, limit = 100, startDate?: Date, endDate?: Date) {
-    const params = new URLSearchParams({
+  // News Service Endpoints
+  public async getNews(skip = 0, limit = 100, startDate?: Date, endDate?: Date): Promise<AxiosResponse<any>> {
+    const params = this.buildQueryParams({
       skip: skip.toString(),
       limit: limit.toString(),
       ...(startDate && { start_date: startDate.toISOString() }),
@@ -133,28 +140,28 @@ export class API {
     return this.axiosInstance.get(`/news?${params}`);
   }
 
-  public async getNewsByGeoIDs(geoIDs: string[]) {
-    const params = new URLSearchParams({
+  public async getNewsByGeoIDs(geoIDs: string[]): Promise<AxiosResponse<any>> {
+    const params = this.buildQueryParams({
       geo_ids: geoIDs.join(','),
     });
 
     return this.axiosInstance.get(`/news-by-geodata?${params}`);
   }
 
-  public async createNews(newsData: NewsCreate) {
+  public async createNews(newsData: NewsCreate): Promise<AxiosResponse<any>> {
     return this.axiosInstance.post('/news', newsData);
   }
 
-  public async updateNews(newsId: number, updateData: NewsUpdate) {
+  public async updateNews(newsId: number, updateData: NewsUpdate): Promise<AxiosResponse<any>> {
     return this.axiosInstance.put(`/news/${newsId}`, updateData);
   }
 
-  public async deleteNews(newsId: number) {
+  public async deleteNews(newsId: number): Promise<AxiosResponse<any>> {
     return this.axiosInstance.delete(`/news/${newsId}`);
   }
 
-  // Geo Service endpoints
-  public async createGeoPoint(point: GeoPoint) {
+  // Geo Service Endpoints
+  public async createGeoPoint(point: GeoPoint): Promise<AxiosResponse<any>> {
     return this.axiosInstance.post('/points', point);
   }
 
@@ -162,8 +169,8 @@ export class API {
     return this.axiosInstance.get(`/points/id/${pointId}`);
   }
 
-  public async getPointsInRadius(latitude: number, longitude: number, radius: number) {
-    const params = new URLSearchParams({
+  public async getPointsInRadius(latitude: number, longitude: number, radius: number): Promise<AxiosResponse<any>> {
+    const params = this.buildQueryParams({
       latitude: latitude.toString(),
       longitude: longitude.toString(),
       radius: radius.toString(),
@@ -178,10 +185,8 @@ export class API {
     radius: number, 
     startDate?: Date | null, 
     endDate?: Date | null
-
   ): Promise<AxiosResponse<NewsResponseWithGeoPoint[]>> {
-
-    const params = new URLSearchParams({
+    const params = this.buildQueryParams({
       latitude: latitude.toString(),
       longitude: longitude.toString(),
       radius: radius.toString(),
@@ -189,16 +194,15 @@ export class API {
       ...(endDate && { end_date: endDate.toISOString() }),
     });
 
-
     return this.axiosInstance.get(`/news-by-radius?${params}`);
   }
 
-  // User Service endpoints
+  // User Service Endpoints
   public async getCurrentUser(): Promise<AxiosResponse<User>> {
     return this.axiosInstance.get('/users/me', { timeout: 5000 });
   }
 
-  public async updateCurrentUser(nickname?: string, password?: string) {
+  public async updateCurrentUser(nickname?: string, password?: string): Promise<AxiosResponse<any>> {
     return this.axiosInstance.patch('/users/me', {
       ...(nickname && { nickname }),
       ...(password && { password }),
@@ -206,7 +210,7 @@ export class API {
   }
 
   public async getAllUsers(skip = 0, limit = 100): Promise<AxiosResponse<User[]>> {
-    const params = new URLSearchParams({
+    const params = this.buildQueryParams({
       skip: skip.toString(),
       limit: limit.toString(),
     });
@@ -218,16 +222,22 @@ export class API {
     return this.axiosInstance.get(`/users/all/${user_id}`);
   }
 
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp;
-      const now = Math.floor(Date.now() / 1000);
-      return now >= (expiry - 30);
-    } catch {
-      return true;
-    }
+  // Utility method to build query parameters
+  private buildQueryParams(params: Record<string, string>): string {
+    return new URLSearchParams(params).toString();
   }
+
+  // Check if token is expired
+  // private isTokenExpired(token: string): boolean {
+  //   try {
+  //     const payload = JSON.parse(atob(token.split('.')[1]));
+  //     const expiry = payload.exp;
+  //     const now = Math.floor(Date.now() / 1000);
+  //     return now >= (expiry - 30);
+  //   } catch {
+  //     return true;
+  //   }
+  // }
 }
 
 // Create and export default instance

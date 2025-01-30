@@ -14,7 +14,7 @@ import api from '@/lib/api';
 import { getUserLocation, saveUserLocation } from '@/lib/news_data_storage';
 
 import { NewsResponse } from '@/types/ApiTypes';
-import MarkerData, { SearchPoint } from '@/types/MarkerData';
+import MarkerData, { MarkerDataWithTitle, SearchPoint } from '@/types/MarkerData';
 import NewsContainer from '@/components/news/NewsContainer';
 
 import { toast, ToastContainer } from 'react-toastify';
@@ -23,6 +23,7 @@ import Link from 'next/link';
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), {ssr: false});
+const Tooltip = dynamic(() => import("react-leaflet").then(mod => mod.Tooltip), {ssr: false});
 
 // Debounce helper function
 const debounce = (func: Function, wait: number) => {
@@ -46,8 +47,6 @@ const calculateZoomLevel = (radiusInKm: number): number => {
   return 8;                            // >100km
 };
 
-
-
 ///////////////
 // COMPONENT //
 ///////////////
@@ -59,7 +58,7 @@ const Home: React.FC = () => {
   const urlLng = searchParams.get('lng');
   const urlZoom = searchParams.get('zoom');
 
-  const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const [markers, setMarkers] = useState<MarkerDataWithTitle[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
   const [timeFilter, setTimeFilter] = useState<number | null>(null);
   const [center, setCenter] = useState(
@@ -100,6 +99,7 @@ const Home: React.FC = () => {
         id: news.id.toString(),
         longitude: news.longitude,
         latitude: news.latitude,
+        title: news.title,
       })));
     }).catch((error) => {
       toast.error('Ошибка получения маркеров');
@@ -177,6 +177,12 @@ const Home: React.FC = () => {
   // MEMOIZED MAP //
   //////////////////
   const mapComponentRef = useRef<L.Map | null>(null);
+
+  const shouldShowTooltip = () => {
+    if (!mapComponentRef.current) return false;
+    const map = mapComponentRef.current;
+    return map.getZoom() >= 15;
+  };
   const displayMap = useMemo(
     () => (
       <MapWithNoSSR
@@ -215,7 +221,18 @@ const Home: React.FC = () => {
                 </div>
               }
             </Popup>
-            
+            {shouldShowTooltip() && (
+              <Tooltip 
+                permanent={true} 
+                direction="bottom" 
+                offset={[-16, 20]}
+                className="custom-tooltip"
+              >
+                <span className="truncate block">
+                  {marker.title}
+                </span>
+              </Tooltip>
+            )}
           </Marker>
         ))}
 
@@ -245,8 +262,8 @@ const Home: React.FC = () => {
       <NavBar />
 
       {/* MAP */}
-      <div className={`flex-1 flex flex-col sm:flex-row pt-14`}> 
-        <div className={`relative w-full ${selectedNews ? 'h-3/4' : 'h-full'} sm:h-full min-h-96`}>
+      <div className={`flex-1 flex flex-col md:flex-row pt-14`}> 
+        <div className={`relative w-full ${selectedNews ? 'h-3/4' : 'h-full'} md:h-full min-h-96`}>
           <div className="w-full h-full">
             {displayMap}
           </div>
@@ -260,7 +277,7 @@ const Home: React.FC = () => {
               onClick={handleCreateNewsClick}
             >
               <FaPlus />
-              <span className="text-xs hidden sm:block">Создать новость</span>
+              <span className="text-xs hidden md:block">Создать новость</span>
             </Link>
 
             {/* SEARCH POINT BUTTON */}
@@ -270,7 +287,7 @@ const Home: React.FC = () => {
               title="Радиус поиска"
             >
               <FaMapMarkerAlt />
-              <span className="text-xs hidden sm:block">Точка поиска</span>
+              <span className="text-xs hidden md:block">Точка поиска</span>
             </Button>
 
             {/* FILTERS BUTTON */}
@@ -281,7 +298,7 @@ const Home: React.FC = () => {
                 title="Фильтры"
               >
                 <FaFilter />
-                <span className="text-xs hidden sm:block">Фильтры</span>
+                <span className="text-xs hidden md:block">Фильтры</span>
               </Button>
               <FiltersMenu
                 isOpened={showFiltersMenu}
@@ -295,7 +312,7 @@ const Home: React.FC = () => {
         {/* SIDEBAR */}
         {selectedNews && (
           <NewsContainer 
-            className='w-full sm:min-w-96 sm:w-96 lg:w-1/4 p-4 bg-white sm:h-[calc(100vh-3.5rem)] overflow-visible sm:overflow-y-auto break-words' 
+            className='w-full md:min-w-120 md:w-120 lg:w-1/4 p-4 bg-white md:h-[calc(100vh-3.5rem)] overflow-visible md:overflow-y-auto break-words' 
             news={selectedNews}
             onGeoPointClick={handleGeoPointClick}
             onClose={() => setSelectedNews(null)}
