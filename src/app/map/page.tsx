@@ -21,6 +21,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import Link from 'next/link';
 
 const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
+const MarkerClusterGroup = dynamic(() => import("@/components/map/MarkerClusterGroup"), {ssr: false});
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), {ssr: false});
 const Tooltip = dynamic(() => import("react-leaflet").then(mod => mod.Tooltip), {ssr: false});
@@ -58,6 +59,7 @@ const Home: React.FC = () => {
   const urlLng = searchParams.get('lng');
   const urlZoom = searchParams.get('zoom');
 
+  const [shouldShowTooltip, setShouldShowTooltip] = useState<boolean>(false);
   const [markers, setMarkers] = useState<MarkerDataWithTitle[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
   const [timeFilter, setTimeFilter] = useState<number | null>(null);
@@ -161,33 +163,22 @@ const Home: React.FC = () => {
     if (map) {
       const center = map.getCenter();
       const zoom = map.getZoom();
+      setShouldShowTooltip(zoom >= 14);
       const newUrl = `/map?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&zoom=${zoom}`;
       window.history.replaceState({}, '', newUrl);
     }
   }, 300), []); // 300ms delay
-
-
-  // Update map view when center or zoom changes
-  useEffect(() => {
-    mapComponentRef.current?.setView(center as [number, number], zoom ? zoom : calculateZoomLevel(searchPoint?.radius || 100));
-  }, [center, zoom]);
-
 
   //////////////////
   // MEMOIZED MAP //
   //////////////////
   const mapComponentRef = useRef<L.Map | null>(null);
 
-  const shouldShowTooltip = () => {
-    if (!mapComponentRef.current) return false;
-    const map = mapComponentRef.current;
-    return map.getZoom() >= 15;
-  };
   const displayMap = useMemo(
     () => (
       <MapWithNoSSR
         mapRef={mapComponentRef}
-        center={center as [number, number]} 
+        center={center as [number, number]}
         zoom={zoom}
         mapType="m"
         onMoveEnd={handleMapMove}
@@ -199,53 +190,53 @@ const Home: React.FC = () => {
           setShowPointMenu={setShowSearchPointMenu} 
         />
 
-        {/* MARKERS */}
-        {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            position={[marker.latitude, marker.longitude]}
-            eventHandlers={{
-              click: () => handleMarkerClick(marker.id)
-            }}
-            zIndexOffset={1000}
-            riseOnHover={true}
-            title={selectedNews?.title || ''}
-          >
-            <Popup> 
-              {selectedNews && 
-                <div className="break-words">
-                  <h3 className="text-teal-500 font-bold text-md">{selectedNews.title}</h3>
-                  <p className="text-xs mt-2 text-gray-500">
-                    {new Date(selectedNews.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              }
-            </Popup>
-            {shouldShowTooltip() && (
-              <Tooltip 
-                permanent={true} 
-                direction="bottom" 
-                offset={[-16, 25]}
-                className="custom-tooltip"
-              >
-                <span className="truncate block">
-                  {marker.title}
-                </span>
-              </Tooltip>
-            )}
-          </Marker>
-        ))}
+        {/* MARKERS WITH CLUSTERING */}
+        {/* <MarkerClusterGroup> */}
+          {markers.map((marker) => (
+            <Marker
+              key={marker.id}
+              position={[marker.latitude, marker.longitude]}
+              eventHandlers={{
+                click: () => handleMarkerClick(marker.id)
+              }}
+              zIndexOffset={1000}
+              riseOnHover={true}
+              title={selectedNews?.title || ''}
+            >
+              <Popup> 
+                {selectedNews && 
+                  <div className="break-words">
+                    <h3 className="text-teal-500 font-bold text-md">{selectedNews.title}</h3>
+                    <p className="text-xs mt-2 text-gray-500">
+                      {new Date(selectedNews.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                }
+              </Popup>
+              {shouldShowTooltip && (
+                <Tooltip 
+                  permanent={true} 
+                  direction="bottom" 
+                  offset={[-16, 25]}
+                  className="custom-tooltip"
+                >
+                  <span className="truncate block">
+                    {marker.title}
+                  </span>
+                </Tooltip>
+              )}
+            </Marker>
+          ))}
+        {/* </MarkerClusterGroup> */}
 
       </MapWithNoSSR>
     ), 
-    [center, markers, selectedNews, handleMarkerClick, searchPoint?.radius, zoom]
+    [center, markers, selectedNews, handleMapMove, shouldShowTooltip]
   );
 
   const handleTimeFilterChange = (hours: number) => {
-    // Here you can implement the logic to filter news by time
     setTimeFilter(hours);
     console.log(`Filtering news for last ${hours} hours`);
-    // You might want to add timeFilter to your API call parameters
   };
 
   // render

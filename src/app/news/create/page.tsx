@@ -10,8 +10,12 @@ import api from '@/lib/api';
 
 import { useMapEvents } from 'react-leaflet';
 import { FaMapMarkerAlt } from 'react-icons/fa';
-import MDEditor from '@uiw/react-md-editor';
+import MDEditor, { commands } from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+import '@/components/news/NewsMarkdown.css';
 
 // Dynamic imports
 const MapWithNoSSR = dynamic(() => import("@/components/map/MapComponent"), {
@@ -110,7 +114,7 @@ const CreateNewsPage = () => {
       
       <div className="flex-1 pt-16 p-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="mb-4">
+          <Card className="mb-4 border-1 border-gray-300 rounded-lg">
             <h1 className="text-2xl font-bold mb-4">Создание новости</h1>
             
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,13 +135,33 @@ const CreateNewsPage = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Содержание
                 </label>
-                <MDEditor
-                  value={content}
-                  onChange={(value?: string) => setContent(value || '')}
-                  previewOptions={{
-                    rehypePlugins: [[rehypeSanitize]],
-                  }}
-                />
+                <div className='flex flex-row gap-4'>
+                  <MDEditor
+                    className='w-1/2 min-h-[200px] !h-full'
+                    value={content}
+                    onChange={(value?: string) => setContent(value || '')}
+                    previewOptions={{
+                      rehypePlugins: [[rehypeSanitize]],
+                      remarkPlugins: [[remarkGfm]],
+                      components: {
+                        h1: 'h2',
+                      }
+                    }}
+                    height={"100%"}
+                    visibleDragbar={false}
+                    extraCommands={[]}
+                    preview='edit'
+                  />
+                  <div className='w-1/2 h-full border-1 min-h-[200px] border-gray-300 rounded-md p-2'>
+                    <Markdown 
+                      components={{
+                        h1: 'h2',
+                      }}
+                      remarkPlugins={[remarkGfm]}
+                      className='mt-4 markdown'>{`${content}`}
+                    </Markdown>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -155,7 +179,7 @@ const CreateNewsPage = () => {
                     <span>Определить</span>
                   </>}
                 </Button>
-                <div className="h-[400px] w-full rounded-lg overflow-hidden">
+                <div className="relative h-[400px] w-full rounded-lg overflow-hidden">
                   <MapWithNoSSR
                     mapRef={mapRef}
                     center={mapCenter}
@@ -181,13 +205,14 @@ const CreateNewsPage = () => {
                       />
                     </>
                     )}
+
+                    {location && (
+                      <p className="absolute bg-white rounded-lg px-2 left-1 border-1 border-gray-300 top-1 text-sm text-gray-500 z-1000">
+                        Координаты: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                      </p>
+                    )}
                   </MapWithNoSSR>
                 </div>
-                {location && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Координаты: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                  </p>
-                )}
               </div>
 
               {error && (

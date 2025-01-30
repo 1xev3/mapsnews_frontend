@@ -93,7 +93,8 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
           h1: 'h2',
         }}
         remarkPlugins={[remarkGfm]}
-        className='w-full mt-4 markdown'>{`${news.content}`}</Markdown>
+        className='w-full mt-4 markdown'>{`${news.content}`}
+      </Markdown>
     </div>
   );
 };

@@ -16,16 +16,16 @@
   @apply text-blue-500;
 }
 
+.markdown a:hover {
+  @apply text-blue-700 underline;
+}
+
 .markdown ul {
   @apply list-disc list-inside;
 }
 
 .markdown ol {
   @apply list-decimal list-inside;
-}
-
-.markdown li {
-  @apply mb-2;
 }
 
 .markdown blockquote {
@@ -57,7 +57,7 @@
 }
 
 .markdown table {
-  @apply w-full border-collapse border border-gray-300;
+  @apply w-full border-collapse border-gray-300;
 }
 
 .markdown th, .markdown td {
@@ -67,12 +67,3 @@
 .markdown th {
   @apply bg-gray-100;
 }
-
-.markdown blockquote p {
-  @apply mb-0;
-}
-
-.markdown blockquote a {
-  @apply text-blue-500;
-}
-

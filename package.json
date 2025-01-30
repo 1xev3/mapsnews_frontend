@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/leaflet.markercluster": "^1.5.5",
     "@uiw/react-md-editor": "^4.0.5",
     "axios": "^1.7.9",
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "leaflet-geosearch": "^4.0.0",
+    "leaflet.markercluster": "^1.5.3",
     "next": "15.1.4",
     "prunecluster": "^2.1.0",
     "react": "^19.0.0",
