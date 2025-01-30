@@ -225,7 +225,7 @@ const Home: React.FC = () => {
               <Tooltip 
                 permanent={true} 
                 direction="bottom" 
-                offset={[-16, 20]}
+                offset={[-16, 25]}
                 className="custom-tooltip"
               >
                 <span className="truncate block">
