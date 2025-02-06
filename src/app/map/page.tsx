@@ -186,7 +186,7 @@ const Home: React.FC = () => {
         <NewsSearchPoint 
           setSearchPoint={setSearchPoint} 
           searchPoint={searchPoint} 
-          showPointMenu={showSearchPointMenu} 
+          showPointMenu={showSearchPointMenu}
           setShowPointMenu={setShowSearchPointMenu} 
         />
 
@@ -231,7 +231,7 @@ const Home: React.FC = () => {
 
       </MapWithNoSSR>
     ), 
-    [center, markers, selectedNews, handleMapMove, shouldShowTooltip]
+    [center, markers, selectedNews, handleMapMove, shouldShowTooltip, showSearchPointMenu]
   );
 
   const handleTimeFilterChange = (hours: number) => {
@@ -274,7 +274,11 @@ const Home: React.FC = () => {
             {/* SEARCH POINT BUTTON */}
             <Button 
               className="w-fit px-3 py-2 rounded-full"
-              onClick={() => setShowSearchPointMenu(!showSearchPointMenu)}
+              onClick={() => {
+                setShowSearchPointMenu(!showSearchPointMenu);
+                console.log("showSearchPointMenu", showSearchPointMenu);
+                setShowFiltersMenu(false);
+              }}
               title="Радиус поиска"
             >
               <FaMapMarkerAlt />
