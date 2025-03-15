@@ -184,7 +184,8 @@ export class API {
     longitude: number, 
     radius: number, 
     startDate?: Date | null, 
-    endDate?: Date | null
+    endDate?: Date | null,
+    tags?: string[]
   ): Promise<AxiosResponse<NewsResponseWithGeoPoint[]>> {
     const params = this.buildQueryParams({
       latitude: latitude.toString(),
@@ -192,6 +193,7 @@ export class API {
       radius: radius.toString(),
       ...(startDate && { start_date: startDate.toISOString() }),
       ...(endDate && { end_date: endDate.toISOString() }),
+      ...(tags && tags.length > 0 && { tags: tags.join(',') })
     });
 
     return this.axiosInstance.get(`/news-by-radius?${params}`);
@@ -216,6 +218,10 @@ export class API {
     });
 
     return this.axiosInstance.get(`/users/all?${params}`);
+  }
+
+  public async getNewsTags(): Promise<AxiosResponse<string[]>> {
+    return this.axiosInstance.get('/news-tags');
   }
 
   public async getUserByID(user_id: number): Promise<AxiosResponse<User>> {

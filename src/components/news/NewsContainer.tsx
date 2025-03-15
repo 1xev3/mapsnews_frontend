@@ -65,6 +65,11 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
       <h1 className='text-2xl font-bold mt-4'>{news.title}</h1>
       <span className='text-sm text-gray-500'>{owner ? "@"+owner.nickname : 'loading...'}</span>
       <span className='text-sm text-gray-500 ml-2'>{formatDate(news.created_at)}</span>
+      <div className='flex flex-wrap gap-2'>
+        {news.tags.map((tag) => (
+          <span key={tag} className='text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-md'>{tag}</span>
+        ))}
+      </div>
       <div className='absolute top-0 right-0 flex flex-row-reverse'>
         <Button variant='ghost' onClick={() => {
           onClose && onClose();

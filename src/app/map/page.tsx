@@ -3,84 +3,37 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import dynamic from "next/dynamic";
 import { useSearchParams } from 'next/navigation';
-import { FaFilter, FaMapMarkerAlt, FaPlus } from "react-icons/fa";
+import { toast, ToastContainer } from 'react-toastify';
 
 import NewsSearchPoint from '@/components/map/NewsSearchPoint';
-import Button from '@/components/ui/Button';
 import NavBar from '@/components/map/NavBar';
-import FiltersMenu from '@/components/map/FiltersMenu';
-
-import api from '@/lib/api';
-import { getUserLocation, saveUserLocation } from '@/lib/news_data_storage';
-
-import { NewsResponse } from '@/types/ApiTypes';
-import MarkerData, { MarkerDataWithTitle, SearchPoint } from '@/types/MarkerData';
+import MapControls from '@/components/map/mapControls';
 import NewsContainer from '@/components/news/NewsContainer';
 
-import { toast, ToastContainer } from 'react-toastify';
-import Link from 'next/link';
+import api from '@/lib/api';
+import { getUserLocation } from '@/lib/news_data_storage';
+import { debounce } from '@/components/map/mapUtils';
 
-const MapWithNoSSR = dynamic(() => import("../../components/map/MapComponent"), {ssr: false});
-const MarkerClusterGroup = dynamic(() => import("@/components/map/MarkerClusterGroup"), {ssr: false});
-const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
-const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), {ssr: false});
-const Tooltip = dynamic(() => import("react-leaflet").then(mod => mod.Tooltip), {ssr: false});
+import { NewsResponse } from '@/types/ApiTypes';
+import { MarkerDataWithTitle, SearchPoint } from '@/types/MarkerData';
 
-// Debounce helper function
-const debounce = (func: Function, wait: number) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+const MapWithNoSSR = dynamic(() => import("@/components/map/MapComponent"), {ssr: false});
+const MapMarkers = dynamic(() => import("@/components/map/mapMarkers"), {ssr: false});
+
+// Custom hook for URL params handling
+const useUrlParams = () => {
+  const searchParams = useSearchParams();
+  return {
+    urlLat: searchParams.get('lat'),
+    urlLng: searchParams.get('lng'),
+    urlZoom: searchParams.get('zoom'),
   };
 };
 
-// Add new function to calculate zoom level based on radius
-const calculateZoomLevel = (radiusInKm: number): number => {
-  // Approximate zoom levels for different radiuses
-  if (radiusInKm <= 1) return 15;      // ~1km
-  if (radiusInKm <= 2) return 14;      // ~2km
-  if (radiusInKm <= 5) return 13;      // ~5km
-  if (radiusInKm <= 10) return 12;     // ~10km
-  if (radiusInKm <= 20) return 11;     // ~20km
-  if (radiusInKm <= 50) return 10;     // ~50km
-  if (radiusInKm <= 100) return 9;     // ~100km
-  return 8;                            // >100km
-};
-
-///////////////
-// COMPONENT //
-///////////////
-const Home: React.FC = () => {
-  const savedLocation = getUserLocation();
-
-  const searchParams = useSearchParams();
-  const urlLat = searchParams.get('lat');
-  const urlLng = searchParams.get('lng');
-  const urlZoom = searchParams.get('zoom');
-
-  const [shouldShowTooltip, setShouldShowTooltip] = useState<boolean>(false);
+// Custom hook for markers fetching
+const useMarkersFetching = (timeFilter: number | null, selectedTags: string[]) => {
   const [markers, setMarkers] = useState<MarkerDataWithTitle[]>([]);
-  const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
-  const [timeFilter, setTimeFilter] = useState<number | null>(null);
-  const [center, setCenter] = useState(
-    urlLat && urlLng 
-      ? [parseFloat(urlLat), parseFloat(urlLng)]
 
-      : [savedLocation?.latitude || 54.18753233082934, savedLocation?.longitude || 35.17676568455171]
-  );
-  const [zoom, setZoom] = useState(urlZoom ? parseInt(urlZoom) : 14);
-  const [showSearchPointMenu, setShowSearchPointMenu] = useState(false);
-  const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
-    savedLocation 
-      ? { latitude: savedLocation.latitude, longitude: savedLocation.longitude, radius: savedLocation.radius? savedLocation.radius : 100 }
-      : { latitude: center[0], longitude: center[1], radius: 100 }
-  );
-  const [showFiltersMenu, setShowFiltersMenu] = useState(false);
-
-  ////////////////////
-  // FETCH MARKERS //
-  ///////////////////
   const fetchMarkers = async (latitude?: number, longitude?: number, radius?: number) => {
     if (!latitude || !longitude || !radius) {
       setMarkers([]);
@@ -90,29 +43,64 @@ const Home: React.FC = () => {
     const startDate: Date | null = timeFilter ? new Date(Date.now() - timeFilter * 60 * 60 * 1000) : null;
     const endDate: Date | null = timeFilter ? new Date() : null;
 
-    api.getNewsInRadius(
-      latitude, 
-      longitude, 
-      radius*1000, 
-      startDate,
-      endDate
-    ).then((response) => {
+    try {
+      const response = await api.getNewsInRadius(
+        latitude, 
+        longitude, 
+        radius*1000, 
+        startDate, 
+        endDate,
+        selectedTags.length > 0 ? selectedTags : undefined
+      );
       setMarkers(response.data.map((news) => ({
         id: news.id.toString(),
         longitude: news.longitude,
         latitude: news.latitude,
         title: news.title,
       })));
-    }).catch((error) => {
+    } catch (error) {
       toast.error('Ошибка получения маркеров');
       console.log('Error fetching markers:', error);
-    });
-
+    }
   };
 
-  /////////////////////////
-  // HANDLE MARKER CLICK //
-  /////////////////////////
+  return { markers, fetchMarkers };
+};
+
+const Home: React.FC = () => {
+  // URL and location state
+  const { urlLat, urlLng, urlZoom } = useUrlParams();
+  const savedLocation = getUserLocation();
+  const [center, setCenter] = useState(
+    urlLat && urlLng 
+      ? [parseFloat(urlLat), parseFloat(urlLng)]
+      : [savedLocation?.latitude || 54.18753233082934, savedLocation?.longitude || 35.17676568455171]
+  );
+  const [zoom, setZoom] = useState(urlZoom ? parseInt(urlZoom) : 14);
+
+  // UI state
+  const [shouldShowTooltip, setShouldShowTooltip] = useState<boolean>(false);
+  const [showSearchPointMenu, setShowSearchPointMenu] = useState(false);
+  const [showFiltersMenu, setShowFiltersMenu] = useState(false);
+
+  // Data state
+  const [timeFilter, setTimeFilter] = useState<number | null>(720);
+  const [selectedNews, setSelectedNews] = useState<NewsResponse | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { markers, fetchMarkers } = useMarkersFetching(timeFilter, selectedTags);
+  const [searchPoint, setSearchPoint] = useState<SearchPoint | null>(
+    savedLocation 
+      ? { 
+          latitude: savedLocation.latitude, 
+          longitude: savedLocation.longitude, 
+          radius: savedLocation.radius ?? 100 
+        }
+      : { latitude: center[0], longitude: center[1], radius: 100 }
+  );
+
+  // Refs
+  const mapComponentRef = useRef<L.Map | null>(null);
+
   const handleMarkerClick = (geo_id: string) => {
     api.getNewsByGeoIDs([geo_id]).then((response) => {
       if (response.data.length > 0) {
@@ -120,7 +108,6 @@ const Home: React.FC = () => {
         setSelectedNews(response.data[0]);
       } else {
         setSelectedNews(null);
-
       }
     }).catch((error) => {
       console.error('Error fetching news:', error);
@@ -128,22 +115,15 @@ const Home: React.FC = () => {
     });
   };
 
-  ///////////////////////////
-  // SEARCH NEWS IN RADIUS //
-  ///////////////////////////
   useEffect(() => {
     if (searchPoint) {
       fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
     }
-  }, [searchPoint, timeFilter]);
+  }, [searchPoint, timeFilter, selectedTags]);
 
-
-  //////////////
-  // HANDLERS //
-  //////////////
   const getCenter = () => {
     return mapComponentRef.current?.getCenter();
-  }
+  };
 
   const handleCreateNewsClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -158,21 +138,19 @@ const Home: React.FC = () => {
     setCenter([latitude, longitude]);
   };
 
-  const handleMapMove = useCallback(debounce(() => {
-    const map = mapComponentRef.current;
-    if (map) {
-      const center = map.getCenter();
-      const zoom = map.getZoom();
-      setShouldShowTooltip(zoom >= 14);
-      const newUrl = `/map?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&zoom=${zoom}`;
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, 300), []); // 300ms delay
-
-  //////////////////
-  // MEMOIZED MAP //
-  //////////////////
-  const mapComponentRef = useRef<L.Map | null>(null);
+  const handleMapMove = useCallback(
+    debounce(() => {
+      const map = mapComponentRef.current;
+      if (map) {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        setShouldShowTooltip(zoom >= 14);
+        const newUrl = `/map?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&zoom=${zoom}`;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }, 300), 
+    []
+  );
 
   const displayMap = useMemo(
     () => (
@@ -189,48 +167,14 @@ const Home: React.FC = () => {
           showPointMenu={showSearchPointMenu}
           setShowPointMenu={setShowSearchPointMenu} 
         />
-
-        {/* MARKERS WITH CLUSTERING */}
-        {/* <MarkerClusterGroup> */}
-          {markers.map((marker) => (
-            <Marker
-              key={marker.id}
-              position={[marker.latitude, marker.longitude]}
-              eventHandlers={{
-                click: () => handleMarkerClick(marker.id)
-              }}
-              zIndexOffset={1000}
-              riseOnHover={true}
-              title={selectedNews?.title || ''}
-            >
-              <Popup> 
-                {selectedNews && 
-                  <div className="break-words">
-                    <h3 className="text-teal-500 font-bold text-md">{selectedNews.title}</h3>
-                    <p className="text-xs mt-2 text-gray-500">
-                      {new Date(selectedNews.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                }
-              </Popup>
-              {shouldShowTooltip && (
-                <Tooltip 
-                  permanent={true} 
-                  direction="bottom" 
-                  offset={[-16, 25]}
-                  className="custom-tooltip"
-                >
-                  <span className="truncate block">
-                    {marker.title}
-                  </span>
-                </Tooltip>
-              )}
-            </Marker>
-          ))}
-        {/* </MarkerClusterGroup> */}
-
+        <MapMarkers 
+          markers={markers}
+          selectedNews={selectedNews}
+          shouldShowTooltip={shouldShowTooltip}
+          onMarkerClick={handleMarkerClick}
+        />
       </MapWithNoSSR>
-    ), 
+    ),
     [center, markers, selectedNews, handleMapMove, shouldShowTooltip, showSearchPointMenu]
   );
 
@@ -239,72 +183,29 @@ const Home: React.FC = () => {
     console.log(`Filtering news for last ${hours} hours`);
   };
 
-  // render
   return (
     <div className="flex flex-col h-screen">
-
-      <ToastContainer
-        position="bottom-left"
-        autoClose={2000}
-        theme="dark"
-      />
-
-      {/* NAVBAR */}
+      <ToastContainer position="bottom-left" autoClose={2000} theme="dark" />
       <NavBar />
-
-      {/* MAP */}
+      
       <div className={`flex-1 flex flex-col md:flex-row pt-14`}> 
         <div className={`relative w-full ${selectedNews ? 'h-3/4' : 'h-full'} md:h-full min-h-96`}>
           <div className="w-full h-full">
             {displayMap}
           </div>
-
-          {/* RIGHT BUTTONS */}
-          <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-lg p-2 items-end">
-            {/* CREATE NEWS BUTTON */}
-            <Link 
-              className="w-fit px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex flex-row items-center justify-center gap-2"
-              href={`/news/create`}
-              onClick={handleCreateNewsClick}
-            >
-              <FaPlus />
-              <span className="text-xs hidden md:block">Создать новость</span>
-            </Link>
-
-            {/* SEARCH POINT BUTTON */}
-            <Button 
-              className="w-fit px-3 py-2 rounded-full"
-              onClick={() => {
-                setShowSearchPointMenu(!showSearchPointMenu);
-                console.log("showSearchPointMenu", showSearchPointMenu);
-                setShowFiltersMenu(false);
-              }}
-              title="Радиус поиска"
-            >
-              <FaMapMarkerAlt />
-              <span className="text-xs hidden md:block">Точка поиска</span>
-            </Button>
-
-            {/* FILTERS BUTTON */}
-            <div className="flex items-center gap-1">
-              <Button 
-                className="w-fit px-3 py-2 rounded-full"
-                onClick={() => setShowFiltersMenu(!showFiltersMenu)}
-                title="Фильтры"
-              >
-                <FaFilter />
-                <span className="text-xs hidden md:block">Фильтры</span>
-              </Button>
-              <FiltersMenu
-                isOpened={showFiltersMenu}
-                setIsOpened={setShowFiltersMenu}
-                onTimeFilterChange={handleTimeFilterChange}
-              />
-            </div>
-          </div>
+          
+          <MapControls 
+            onCreateNewsClick={handleCreateNewsClick}
+            showSearchPointMenu={showSearchPointMenu}
+            setShowSearchPointMenu={setShowSearchPointMenu}
+            showFiltersMenu={showFiltersMenu}
+            setShowFiltersMenu={setShowFiltersMenu}
+            onTimeFilterChange={handleTimeFilterChange}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
         </div>
 
-        {/* SIDEBAR */}
         {selectedNews && (
           <NewsContainer 
             className='w-full md:min-w-120 md:w-120 lg:w-1/4 p-4 bg-white md:h-[calc(100vh-3.5rem)] overflow-visible md:overflow-y-auto break-words' 

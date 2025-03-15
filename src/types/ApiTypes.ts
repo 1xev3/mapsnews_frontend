@@ -5,6 +5,7 @@ export interface NewsResponse {
     creator_id: number;
     created_at: string;
     geodata_id: number;
+    tags: string[];
 }
 
 export interface NewsResponseWithGeoPoint extends NewsResponse {
@@ -35,11 +36,13 @@ export interface NewsCreate {
     content: string;
     latitude: number;
     longitude: number;
+    tags: string[];
 }
 
 export interface NewsUpdate {
     title?: string;
     content?: string;
+    tags?: string[];
 }
 
 export interface GeoPoint {

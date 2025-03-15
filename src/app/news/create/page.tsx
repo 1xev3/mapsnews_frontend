@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import NavBar from '@/components/map/NavBar';
@@ -16,7 +16,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import '@/components/news/NewsMarkdown.css';
-
+import { Dropdown } from '@/components/ui/Dropdown';
 // Dynamic imports
 const MapWithNoSSR = dynamic(() => import("@/components/map/MapComponent"), {
   ssr: false
@@ -28,15 +28,20 @@ const CreateNewsPage = () => {
   const searchParams = useSearchParams();
   const initialLat = parseFloat(searchParams.get('lat') || '55.75') || 55.75;
   const initialLng = parseFloat(searchParams.get('lng') || '37.61') || 37.61;
+
+  const [allTags, setAllTags] = useState<string[]>([]);
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([initialLat, initialLng]);
   const mapRef = useRef<any>(null);
+  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
 
   const MapClickHandler = () => {
     useMapEvents({
@@ -98,7 +103,8 @@ const CreateNewsPage = () => {
         title,
         content,
         latitude: location.latitude,
-        longitude: location.longitude
+        longitude: location.longitude,
+        tags: tags
       });
       router.push('/map');
     } catch (err) {
@@ -107,6 +113,22 @@ const CreateNewsPage = () => {
       setIsLoading(false);
     }
   };
+
+  const handleAddTag = () => {
+    if (selectedTag && !tags.includes(selectedTag)) {
+      setTags([...tags, selectedTag]);
+      setSelectedTag('');
+      setIsTagDropdownOpen(false);
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  useEffect(() => {
+    api.getNewsTags().then(res => setAllTags(res.data));
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -212,6 +234,64 @@ const CreateNewsPage = () => {
                       </p>
                     )}
                   </MapWithNoSSR>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Теги
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {tags.map(tag => (
+                    <span 
+                      key={tag} 
+                      className="bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Dropdown
+                      placeholder="Выберите тег..."
+                      isOpened={isTagDropdownOpen}
+                      setIsOpened={setIsTagDropdownOpen}
+                      selfContent={selectedTag || "Выберите тег..."}
+                    >
+                      <div className="p-1">
+                        {allTags
+                          .filter(tag => !tags.includes(tag))
+                          .map(tag => (
+                            <div
+                              key={tag}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                              onClick={() => {
+                                setSelectedTag(tag);
+                                setIsTagDropdownOpen(false);
+                              }}
+                            >
+                              {tag}
+                            </div>
+                          ))}
+                      </div>
+                    </Dropdown>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleAddTag}
+                    disabled={!selectedTag}
+                    className="px-4"
+                  >
+                    +
+                  </Button>
                 </div>
               </div>
 

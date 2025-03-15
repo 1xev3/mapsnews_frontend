@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { TimeFilter, saveTimeFilter, getTimeFilter } from '@/lib/news_data_storage';
+import api from '@/lib/api';
 
 const TIME_FILTERS: TimeFilter[] = [
   { label: 'За час', hours: 1 },
@@ -15,23 +16,31 @@ interface FiltersMenuProps {
   onTimeFilterChange: (hours: number) => void;
   isOpened: boolean;
   setIsOpened: (isOpened: boolean) => void;
+  selectedTags: string[];
+  onTagsChange: (tags: string[]) => void;
 }
 
 const FiltersMenu: React.FC<FiltersMenuProps> = ({
   onTimeFilterChange,
   isOpened,
-  setIsOpened
+  setIsOpened,
+  selectedTags,
+  onTagsChange
 }) => {
   const [selectedTime, setSelectedTime] = useState<TimeFilter>(TIME_FILTERS[2]);
   const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
-  // Load saved filter on component mount
+  // Load saved filter and tags on component mount
   useEffect(() => {
     const savedFilter = getTimeFilter();
     if (savedFilter) {
       setSelectedTime(savedFilter);
       onTimeFilterChange(savedFilter.hours);
     }
+    
+    // Load available tags
+    api.getNewsTags().then(res => setAllTags(res.data));
   }, []);
 
   const handleTimeFilterChange = (filter: TimeFilter) => {
@@ -39,6 +48,14 @@ const FiltersMenu: React.FC<FiltersMenuProps> = ({
     saveTimeFilter(filter);
     onTimeFilterChange(filter.hours);
     setIsTimeDropdownOpen(false);
+  };
+
+  const handleTagToggle = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      onTagsChange(selectedTags.filter(t => t !== tag));
+    } else {
+      onTagsChange([...selectedTags, tag]);
+    }
   };
 
   if (!isOpened) return null;
@@ -73,7 +90,24 @@ const FiltersMenu: React.FC<FiltersMenuProps> = ({
           </Dropdown>
         </div>
         
-        {/* Здесь можно добавить другие фильтры в будущем */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">По тегам</h4>
+          <div className="flex flex-wrap gap-2">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-2 py-1 rounded-full text-sm ${
+                  selectedTags.includes(tag)
+                    ? 'bg-teal-500 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
