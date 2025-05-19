@@ -1,4 +1,4 @@
-import { FaFilter, FaMapMarkerAlt, FaPlus } from "react-icons/fa";
+import { FaFilter, FaMapMarkerAlt, FaPlus, FaUsers } from "react-icons/fa";
 import Button from '@/components/ui/Button';
 import FiltersMenu from '@/components/map/FiltersMenu';
 import Link from 'next/link';
@@ -30,7 +30,7 @@ const MapControls: React.FC<MapControlsProps> = ({
   return (
     <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-lg p-2 items-end">
       {/* Кнопка создать новость */}
-      {/* 1 - Админиситратор, 2 - Редактор */}
+      {/* 1 - Администратор, 2 - Редактор */}
       {user && (user.group_id === 1 || user.group_id === 2) && (
         <Link 
           className="w-fit px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex flex-row items-center justify-center gap-2"
@@ -38,8 +38,20 @@ const MapControls: React.FC<MapControlsProps> = ({
           onClick={onCreateNewsClick}
         >
           <FaPlus />
-            <span className="text-xs hidden md:block">Создать новость</span>
-          </Link>
+          <span className="text-xs hidden md:block">Создать новость</span>
+        </Link>
+      )}
+
+      {/* Кнопка управление пользователями */}
+      {/* 1 - Администратор*/}
+      {user && (user.group_id === 1) && (
+        <Link 
+          className="w-fit px-3 py-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white flex flex-row items-center justify-center gap-2"
+          href={`/admin/users`}
+        >
+          <FaUsers />
+          <span className="text-xs hidden md:block">Управление пользователями</span>
+        </Link>
       )}
 
       {/* Кнопка точка поиска */}

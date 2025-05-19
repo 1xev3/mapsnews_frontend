@@ -9,7 +9,7 @@ import Link from "next/link"
 //bg-linear-to-r from-emerald-200 to-teal-300
 const hotBarBaseClasses = `
   fixed top-0
-  h-14 px-4 py-2 w-full px-10
+  h-14 px-4 py-2 w-full px-2
   flex items-center justify-between
   bg-black
   z-50
@@ -51,8 +51,8 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
     <>
       <div className={hotBarBaseClasses}>
         {/* Logo */}
-        <div className="flex items-center">
-          <span className="text-xl font-bold text-white">NM</span>
+        <div className="flex items-center pl-2">
+          <span className="text-xl font-bold text-white">NewsMap</span>
         </div>
 
         {/* Actions */}

@@ -104,7 +104,6 @@ const Home: React.FC = () => {
   const handleMarkerClick = (geo_id: string) => {
     api.getNewsByGeoIDs([geo_id]).then((response) => {
       if (response.data.length > 0) {
-        console.log('response.data', response.data);
         setSelectedNews(response.data[0]);
       } else {
         setSelectedNews(null);

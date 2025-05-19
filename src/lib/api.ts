@@ -224,30 +224,32 @@ export class API {
     return this.axiosInstance.get(`/users/all?${params}`);
   }
 
-  public async getNewsTags(): Promise<AxiosResponse<string[]>> {
-    return this.axiosInstance.get('/news-tags');
-  }
-
   public async getUserByID(user_id: number): Promise<AxiosResponse<User>> {
     return this.axiosInstance.get(`/users/all/${user_id}`);
+  }
+
+  public async getUserGroups(): Promise<AxiosResponse<{ id: number; name: string }[]>> {
+    return this.axiosInstance.get('/groups');
+  }
+
+  public async updateUser(user_id: number, data: { 
+    nickname?: string; 
+    password?: string; 
+    group_id?: number;
+    email?: string;
+    is_active?: boolean;
+  }): Promise<AxiosResponse<User>> {
+    return this.axiosInstance.patch(`/users/all/${user_id}`, data);
+  }
+
+  public async getNewsTags(): Promise<AxiosResponse<string[]>> {
+    return this.axiosInstance.get('/news-tags');
   }
 
   // Utility method to build query parameters
   private buildQueryParams(params: Record<string, string>): string {
     return new URLSearchParams(params).toString();
   }
-
-  // Check if token is expired
-  // private isTokenExpired(token: string): boolean {
-  //   try {
-  //     const payload = JSON.parse(atob(token.split('.')[1]));
-  //     const expiry = payload.exp;
-  //     const now = Math.floor(Date.now() / 1000);
-  //     return now >= (expiry - 30);
-  //   } catch {
-  //     return true;
-  //   }
-  // }
 }
 
 // Create and export default instance

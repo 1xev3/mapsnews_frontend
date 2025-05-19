@@ -9,11 +9,11 @@ import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-toastify';
 import Button from '../ui/Button';
 import { useRouter } from 'next/navigation';
-import { FaEllipsisH, FaTimes, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaEllipsisH, FaTimes, FaMapMarkerAlt, FaTrash } from 'react-icons/fa';
 import remarkGfm from 'remark-gfm'
 
 import './NewsMarkdown.css';
-
+import { useUser } from '@/lib/user_context';
 interface NewsContainerProps {
   news: NewsResponse;
   className?: string;
@@ -22,6 +22,8 @@ interface NewsContainerProps {
 }
 
 const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPointClick, onClose }) => {
+  const { user, logout } = useUser();
+
   const router = useRouter();
   const [owner, setOwner] = useState<User | null>(null);
   const [geoPoint, setGeoPoint] = useState<GeoPointResponse | null>(null);
@@ -41,6 +43,15 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
     });
   }, [news]);
 
+  const handleDeleteNews = () => {
+    api.deleteNews(news.id).then((response: AxiosResponse<void>) => {
+      window.location.reload();
+      toast.success('Новость удалена');
+    }).catch((error) => {
+      toast.error('Ошибка удаления новости');
+    });
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('ru-RU', 
       { day: '2-digit', 
@@ -56,7 +67,7 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
       if (onGeoPointClick) {
         onGeoPointClick(geoPoint.latitude, geoPoint.longitude);
       }
-      router.push(`/map?lat=${geoPoint.latitude}&lng=${geoPoint.longitude}&zoom=14`);
+      window.location.href = `/map?lat=${geoPoint.latitude}&lng=${geoPoint.longitude}&zoom=14`;
     }
   };
 
@@ -77,6 +88,15 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
           <FaTimes />
         </Button>
 
+        {/* Кнопка удаления новости для админа */}
+        {user && (user.group_id === 1) && (
+          <Button variant='ghost' onClick={() => {
+            handleDeleteNews();
+          }}>
+            <FaTrash />
+          </Button>
+        )}
+
         {geoPoint && (
           <Button 
             variant='ghost' 
@@ -87,11 +107,11 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
           </Button>
         )}
 
-        <Button variant='ghost' onClick={() => {
+        {/* <Button variant='ghost' onClick={() => {
           //TODO: action context menu
         }}>
           <FaEllipsisH />
-        </Button>
+        </Button> */}
       </div>
       <Markdown 
         components={{
