@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 // List of public routes that don't require authentication
 const publicRoutes = ['/','/map'];
-const authRoutes = ['/login'];
+const authRoutes = ['/login', "/register"];
 
 function isTokenExpired(token: string | undefined): boolean {
   if (!token) return true;
@@ -58,6 +58,7 @@ export const config = {
   matcher: [
     '/((?!_next/static|favicon.ico|public).*)',
     '/login',
+    '/register',
     '/profile',
     '/admin/:path*',
     '/news/create',

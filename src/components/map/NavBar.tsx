@@ -72,6 +72,19 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
                 </span>
               }
           >
+
+            {/* Кнопка зарегистрироваться */}
+            {!user && (
+                <Link 
+                href={"/register"} 
+                onClick={() => setIsUserMenuOpen(false)}
+                className="block w-full px-4 py-1 text-sm text-left hover:bg-gray-100 rounded-lg"
+              >
+                Регистрация
+              </Link>
+            )}
+
+            {/* Кнопка войти */}
             <Link 
               href={user ? "/profile" : "/login?returnTo=/map"} 
               onClick={() => setIsUserMenuOpen(false)}
@@ -79,6 +92,8 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
             >
               {user ? "Открыть профиль" : "Войти"}
             </Link>
+
+            {/* Кнопка выйти */}
             {user && (
               <button
                 onClick={handleLogout}
@@ -90,27 +105,6 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
           </Dropdown>
         </div>
       </div>
-
-      {/* User Menu */}
-      {/* {isUserMenuOpen && (
-        <div className="fixed top-12 right-0 bg-white rounded-lg shadow-2xl p-2 m-2 min-w-[200px] z-50">
-          <Link 
-            href={user ? "/profile" : "/login?returnTo=/map"} 
-            onClick={() => setIsUserMenuOpen(false)}
-            className="block w-full px-4 py-1 text-sm text-left hover:bg-gray-100 rounded-lg"
-          >
-            {user ? "Открыть профиль" : "Войти"}
-          </Link>
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="w-full px-4 py-1 text-left text-sm text-red-600 hover:bg-gray-100 rounded-lg"
-            >
-              Выйти из аккаунта
-            </button>
-          )}
-        </div>
-      )} */}
     </>
   )
 }

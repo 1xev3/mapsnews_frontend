@@ -31,6 +31,12 @@ export interface LoginCredentials {
     password: string;
 }
 
+export interface RegisterCredentials {
+    email: string;
+    nickname: string;
+    password: string;
+}
+
 export interface NewsCreate {
     title: string;
     content: string;

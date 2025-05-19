@@ -1,4 +1,4 @@
-import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse, NewsResponseWithGeoPoint } from '@/types/ApiTypes';
+import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse, NewsResponseWithGeoPoint, RegisterCredentials } from '@/types/ApiTypes';
 import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
 
 export class API {
@@ -118,6 +118,10 @@ export class API {
     const response = await this.axiosInstance.post<{ access_token: string }>('/auth/login', formData);
     this.setAccessToken(response.data.access_token);
     // Refresh token is automatically handled by the browser in httpOnly cookie
+  }
+
+  public async register(credentials: RegisterCredentials): Promise<void> {
+    await this.axiosInstance.post('/auth/register', credentials);
   }
 
   public async logout(): Promise<void> {
