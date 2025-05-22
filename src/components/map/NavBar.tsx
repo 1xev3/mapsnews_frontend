@@ -52,7 +52,7 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
       <div className={hotBarBaseClasses}>
         {/* Logo */}
         <div className="flex items-center pl-2">
-          <span className="text-xl font-bold text-white">NewsMap</span>
+          <Link href="/" className="text-xl font-bold text-white hover:scale-105 transition-all duration-300 hover:text-blue-300">NewsMap</Link>
         </div>
 
         {/* Actions */}
@@ -85,13 +85,15 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
             )}
 
             {/* Кнопка войти */}
-            <Link 
-              href={user ? "/profile" : "/login?returnTo=/map"} 
-              onClick={() => setIsUserMenuOpen(false)}
+            {!user && (
+              <Link 
+                href={"/profile"} 
+                onClick={() => setIsUserMenuOpen(false)}
               className="block w-full px-4 py-1 text-sm text-left hover:bg-gray-100 rounded-lg"
-            >
-              {user ? "Открыть профиль" : "Войти"}
-            </Link>
+              >
+                Войти
+              </Link>
+            )}
 
             {/* Кнопка выйти */}
             {user && (

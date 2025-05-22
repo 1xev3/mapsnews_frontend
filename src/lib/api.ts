@@ -215,10 +215,11 @@ export class API {
     });
   }
 
-  public async getAllUsers(skip = 0, limit = 100): Promise<AxiosResponse<User[]>> {
+  public async getAllUsers(skip = 0, limit = 100, email?: string): Promise<AxiosResponse<User[]>> {
     const params = this.buildQueryParams({
       skip: skip.toString(),
       limit: limit.toString(),
+      ...(email && { email }),
     });
 
     return this.axiosInstance.get(`/users/all?${params}`);

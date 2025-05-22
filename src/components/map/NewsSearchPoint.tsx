@@ -117,7 +117,7 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium">
-                Радиус поиска (киллометры)
+                Радиус поиска (километры)
               </label>
               <input
                 type="number"

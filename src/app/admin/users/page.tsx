@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { User } from '@/types/ApiTypes';
+import { NavBar } from '@/components/map/NavBar';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -14,16 +15,32 @@ const UserManagementPage: React.FC = () => {
   const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchEmail, setSearchEmail] = useState('');
+  const [formData, setFormData] = useState<{ nickname: string; password: string; group_id: string }>({
+    nickname: '',
+    password: '',
+    group_id: '0'
+  });
 
   useEffect(() => {
     loadUsers();
     loadGroups();
-  }, [currentPage]);
+  }, [currentPage, searchEmail]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setFormData({
+        nickname: selectedUser.nickname,
+        password: '',
+        group_id: selectedUser.group_id.toString()
+      });
+    }
+  }, [selectedUser]);
 
   const loadUsers = async () => {
     try {
       const skip = Math.max(0, (currentPage - 1) * ITEMS_PER_PAGE);
-      const response = await api.getAllUsers(skip, ITEMS_PER_PAGE);
+      const response = await api.getAllUsers(skip, ITEMS_PER_PAGE, searchEmail || undefined);
       setUsers(response.data);
       const total = response.headers['x-total-count'] 
         ? parseInt(response.headers['x-total-count'])
@@ -47,28 +64,31 @@ const UserManagementPage: React.FC = () => {
     setSelectedUser(user);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
 
     setIsLoading(true);
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
       const data: { nickname?: string; password?: string; group_id?: number } = {};
 
-      const nickname = formData.get('nickname') as string;
-      const password = formData.get('password') as string;
-      const group_id = formData.get('group_id') as string;
-
-      if (nickname && nickname !== selectedUser.nickname) {
-        data.nickname = nickname;
+      if (formData.nickname && formData.nickname !== selectedUser.nickname) {
+        data.nickname = formData.nickname;
       }
 
-      if (password) {
-        data.password = password;
+      if (formData.password) {
+        data.password = formData.password;
       }
 
-      const newGroupId = parseInt(group_id);
+      const newGroupId = parseInt(formData.group_id);
       if (newGroupId > 0 && newGroupId !== selectedUser.group_id) {
         data.group_id = newGroupId;
       }
@@ -96,7 +116,10 @@ const UserManagementPage: React.FC = () => {
   const totalPages = Math.ceil(totalUsers / ITEMS_PER_PAGE);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex flex-col h-screen">
+      <NavBar />
+      <div className="container mx-auto px-4 py-8 pt-22">
+
       <h1 className="text-2xl font-bold mb-6">Управление пользователями</h1>
 
       {error && (
@@ -104,6 +127,16 @@ const UserManagementPage: React.FC = () => {
           {error}
         </div>
       )}
+
+      <div className="mb-4">
+        <input
+          type="email"
+          placeholder="Поиск по email"
+          value={searchEmail}
+          onChange={(e) => setSearchEmail(e.target.value)}
+          className="w-full md:w-64 px-3 py-2 border rounded-md"
+        />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
@@ -171,7 +204,8 @@ const UserManagementPage: React.FC = () => {
                     type="text"
                     id="nickname"
                     name="nickname"
-                    defaultValue={selectedUser.nickname}
+                    value={formData.nickname}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                     required
                   />
@@ -185,6 +219,8 @@ const UserManagementPage: React.FC = () => {
                     type="password"
                     id="password"
                     name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                   />
                 </div>
@@ -196,7 +232,8 @@ const UserManagementPage: React.FC = () => {
                   <select
                     id="group_id"
                     name="group_id"
-                    defaultValue={selectedUser.group_id}
+                    value={formData.group_id}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                     required
                   >
@@ -228,6 +265,7 @@ const UserManagementPage: React.FC = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
