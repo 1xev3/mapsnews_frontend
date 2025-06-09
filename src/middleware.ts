@@ -59,7 +59,6 @@ export const config = {
     '/((?!_next/static|favicon.ico|public).*)',
     '/login',
     '/register',
-    '/profile',
     '/admin/:path*',
     '/news/create',
     '/news/edit/:path*'

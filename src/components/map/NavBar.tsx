@@ -87,7 +87,7 @@ export const NavBar: React.FC<NavBarProps> = ({ children }) => {
             {/* Кнопка войти */}
             {!user && (
               <Link 
-                href={"/profile"} 
+                href={"/login"} 
                 onClick={() => setIsUserMenuOpen(false)}
               className="block w-full px-4 py-1 text-sm text-left hover:bg-gray-100 rounded-lg"
               >
