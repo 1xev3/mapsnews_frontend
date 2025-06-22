@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, ReactNode, useState } from 'react'
+import { useRef, useEffect, ReactNode } from 'react'
 import { useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet.markercluster/dist/leaflet.markercluster'

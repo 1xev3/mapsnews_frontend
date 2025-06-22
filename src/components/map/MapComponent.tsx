@@ -21,7 +21,7 @@ import "./MapComponent.css"
 interface MapComponentProps {
   center: [number, number];
   zoom: number;
-  mapRef?: React.RefObject<any>;
+  mapRef?: React.RefObject<L.Map | null>;
   mapType: "h" | "m" | "p" | "r" | "s" | "t" | "y";
   children?: React.ReactNode;
   onMoveEnd?: () => void;
@@ -81,5 +81,7 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({ center, zoom, ma
     </MapContainer>
   );
 });
+
+MapComponent.displayName = 'MapComponent';
 
 export default MapComponent;

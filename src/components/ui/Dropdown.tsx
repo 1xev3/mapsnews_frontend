@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface DropdownProps {
@@ -33,7 +33,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [setIsOpened]);
 
     return (
         <div 

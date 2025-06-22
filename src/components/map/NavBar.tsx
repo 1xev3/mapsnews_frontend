@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
-import { FaTh, FaUser } from "react-icons/fa"
-import Button from "@/components/ui/Button"
+import { FaUser } from "react-icons/fa"
 import { Dropdown } from "@/components/ui/Dropdown"
 import { useUser } from "@/lib/user_context"
 import Link from "next/link"
@@ -15,26 +14,10 @@ const hotBarBaseClasses = `
   z-50
 `
 
-const actionButtonClasses = `
-  relative
-  flex flex-col items-center justify-center
-  min-w-[64px] h-full
-  text-white/90 hover:text-white
-  transition-all duration-200
-  hover:bg-white/10
-  rounded-none
-  group
-  gap-0
-`
-
 const buttonIconClasses = "w-4 h-4"
 const buttonLabelClasses = "text-xs font-medium opacity-90"
 
-interface NavBarProps {
-  children?: React.ReactNode
-}
-
-export const NavBar: React.FC<NavBarProps> = ({ children }) => {
+export const NavBar: React.FC = () => {
   const { user, logout } = useUser();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 

@@ -1,4 +1,4 @@
-import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse, NewsResponseWithGeoPoint, RegisterCredentials } from '@/types/ApiTypes';
+import { GeoPoint, LoginCredentials, NewsCreate, NewsUpdate, User, GeoPointResponse, NewsResponseWithGeoPoint, RegisterCredentials, NewsResponse } from '@/types/ApiTypes';
 import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
 
 export class API {
@@ -133,7 +133,7 @@ export class API {
   }
 
   // News Service Endpoints
-  public async getNews(skip = 0, limit = 100, startDate?: Date, endDate?: Date): Promise<AxiosResponse<any>> {
+  public async getNews(skip = 0, limit = 100, startDate?: Date, endDate?: Date): Promise<AxiosResponse<NewsResponse[]>> {
     const params = this.buildQueryParams({
       skip: skip.toString(),
       limit: limit.toString(),
@@ -144,7 +144,7 @@ export class API {
     return this.axiosInstance.get(`/news?${params}`);
   }
 
-  public async getNewsByGeoIDs(geoIDs: string[]): Promise<AxiosResponse<any>> {
+  public async getNewsByGeoIDs(geoIDs: string[]): Promise<AxiosResponse<NewsResponse[]>> {
     const params = this.buildQueryParams({
       geo_ids: geoIDs.join(','),
     });
@@ -152,20 +152,20 @@ export class API {
     return this.axiosInstance.get(`/news-by-geodata?${params}`);
   }
 
-  public async createNews(newsData: NewsCreate): Promise<AxiosResponse<any>> {
+  public async createNews(newsData: NewsCreate): Promise<AxiosResponse<NewsResponse>> {
     return this.axiosInstance.post('/news', newsData);
   }
 
-  public async updateNews(newsId: number, updateData: NewsUpdate): Promise<AxiosResponse<any>> {
+  public async updateNews(newsId: number, updateData: NewsUpdate): Promise<AxiosResponse<NewsResponse>> {
     return this.axiosInstance.put(`/news/${newsId}`, updateData);
   }
 
-  public async deleteNews(newsId: number): Promise<AxiosResponse<any>> {
+  public async deleteNews(newsId: number): Promise<AxiosResponse<void>> {
     return this.axiosInstance.delete(`/news/${newsId}`);
   }
 
   // Geo Service Endpoints
-  public async createGeoPoint(point: GeoPoint): Promise<AxiosResponse<any>> {
+  public async createGeoPoint(point: GeoPoint): Promise<AxiosResponse<GeoPointResponse>> {
     return this.axiosInstance.post('/points', point);
   }
 
@@ -173,7 +173,7 @@ export class API {
     return this.axiosInstance.get(`/points/id/${pointId}`);
   }
 
-  public async getPointsInRadius(latitude: number, longitude: number, radius: number): Promise<AxiosResponse<any>> {
+  public async getPointsInRadius(latitude: number, longitude: number, radius: number): Promise<AxiosResponse<GeoPointResponse[]>> {
     const params = this.buildQueryParams({
       latitude: latitude.toString(),
       longitude: longitude.toString(),
@@ -208,7 +208,7 @@ export class API {
     return this.axiosInstance.get('/users/me', { timeout: 5000 });
   }
 
-  public async updateCurrentUser(nickname?: string, password?: string): Promise<AxiosResponse<any>> {
+  public async updateCurrentUser(nickname?: string, password?: string): Promise<AxiosResponse<User>> {
     return this.axiosInstance.patch('/users/me', {
       ...(nickname && { nickname }),
       ...(password && { password }),

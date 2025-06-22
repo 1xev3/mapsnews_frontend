@@ -1,7 +1,7 @@
 // Debounce helper function
-export const debounce = (func: Function, wait: number) => {
+export const debounce = (func: (...args: unknown[]) => void, wait: number) => {
     let timeout: NodeJS.Timeout;
-    return (...args: any[]) => {
+    return (...args: unknown[]) => {
         clearTimeout(timeout);
         timeout = setTimeout(() => func(...args), wait);
     };

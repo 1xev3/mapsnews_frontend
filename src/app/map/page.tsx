@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from 'react';
 import dynamic from "next/dynamic";
 import { useSearchParams } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 
 import NewsSearchPoint from '@/components/map/NewsSearchPoint';
 import NavBar from '@/components/map/NavBar';
@@ -34,7 +34,7 @@ const useUrlParams = () => {
 const useMarkersFetching = (timeFilter: number | null, selectedTags: string[]) => {
   const [markers, setMarkers] = useState<MarkerDataWithTitle[]>([]);
 
-  const fetchMarkers = async (latitude?: number, longitude?: number, radius?: number) => {
+  const fetchMarkers = useCallback(async (latitude?: number, longitude?: number, radius?: number) => {
     if (!latitude || !longitude || !radius) {
       setMarkers([]);
       return;
@@ -59,10 +59,9 @@ const useMarkersFetching = (timeFilter: number | null, selectedTags: string[]) =
         title: news.title,
       })));
     } catch (error) {
-      toast.error('Ошибка получения маркеров');
       console.log('Error fetching markers:', error);
     }
-  };
+  }, [timeFilter, selectedTags]);
 
   return { markers, fetchMarkers };
 };
@@ -110,7 +109,6 @@ const Home: React.FC = () => {
       }
     }).catch((error) => {
       console.error('Error fetching news:', error);
-      toast.error('Ошибка получения новостей');
     });
   };
 
@@ -118,7 +116,7 @@ const Home: React.FC = () => {
     if (searchPoint) {
       fetchMarkers(searchPoint.latitude, searchPoint.longitude, searchPoint.radius);
     }
-  }, [searchPoint, timeFilter, selectedTags]);
+  }, [searchPoint, fetchMarkers]);
 
   const getCenter = () => {
     return mapComponentRef.current?.getCenter();
@@ -137,19 +135,18 @@ const Home: React.FC = () => {
     setCenter([latitude, longitude]);
   };
 
-  const handleMapMove = useCallback(
-    debounce(() => {
-      const map = mapComponentRef.current;
-      if (map) {
-        const center = map.getCenter();
-        const zoom = map.getZoom();
-        setShouldShowTooltip(zoom >= 14);
-        const newUrl = `/map?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&zoom=${zoom}`;
-        window.history.replaceState({}, '', newUrl);
-      }
-    }, 300), 
-    []
-  );
+  const handleMapMove = useCallback(() => {
+    const map = mapComponentRef.current;
+    if (map) {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      setShouldShowTooltip(zoom >= 14);
+      const newUrl = `/map?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&zoom=${zoom}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
+
+  const debouncedMapMove = useMemo(() => debounce(handleMapMove, 300), [handleMapMove]);
 
   const displayMap = useMemo(
     () => (
@@ -158,7 +155,7 @@ const Home: React.FC = () => {
         center={center as [number, number]}
         zoom={zoom}
         mapType="m"
-        onMoveEnd={handleMapMove}
+        onMoveEnd={debouncedMapMove}
       >
         <NewsSearchPoint 
           setSearchPoint={setSearchPoint} 
@@ -174,7 +171,7 @@ const Home: React.FC = () => {
         />
       </MapWithNoSSR>
     ),
-    [center, markers, selectedNews, handleMapMove, shouldShowTooltip, showSearchPointMenu]
+    [center, markers, selectedNews, debouncedMapMove, shouldShowTooltip, showSearchPointMenu, searchPoint, zoom]
   );
 
   const handleTimeFilterChange = (hours: number) => {
@@ -218,4 +215,10 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <Home />
+    </Suspense>
+  );
+}

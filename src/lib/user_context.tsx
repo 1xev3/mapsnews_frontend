@@ -25,7 +25,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       .then((response) => {
         setUser(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         setUser(null);
       })
       .finally(() => {

@@ -28,10 +28,11 @@ const RegisterForm: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...registerData } = credentials;
       await api.register(registerData);
       router.push('/login');
-    } catch (err) {
+    } catch {
       setError('Ошибка при регистрации');
     } finally {
       setIsLoading(false);

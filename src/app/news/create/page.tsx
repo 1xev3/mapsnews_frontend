@@ -7,10 +7,11 @@ import NavBar from '@/components/map/NavBar';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import api from '@/lib/api';
+import { Suspense } from "react";
 
 import { useMapEvents } from 'react-leaflet';
 import { FaMapMarkerAlt } from 'react-icons/fa';
-import MDEditor, { commands } from '@uiw/react-md-editor';
+import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -39,7 +40,7 @@ const CreateNewsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([initialLat, initialLng]);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
 
@@ -75,12 +76,12 @@ const CreateNewsPage = () => {
         setMapCenter([newLocation.latitude, newLocation.longitude]);
         
         if (mapRef.current) {
-          mapRef.current.panTo([newLocation.latitude, newLocation.longitude], 10);
+          mapRef.current.panTo([newLocation.latitude, newLocation.longitude]);
         }
         
         setIsLoadingLocation(false);
       },
-      (error) => {
+      () => {
         setError('Не удалось получить текущее местоположение');
         setIsLoadingLocation(false);
       }
@@ -107,7 +108,7 @@ const CreateNewsPage = () => {
         tags: tags
       });
       router.push('/map');
-    } catch (err) {
+    } catch {
       setError('Ошибка при создании новости');
     } finally {
       setIsLoading(false);
@@ -314,4 +315,10 @@ const CreateNewsPage = () => {
   );
 };
 
-export default CreateNewsPage; 
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <CreateNewsPage />
+    </Suspense>
+  );
+} 

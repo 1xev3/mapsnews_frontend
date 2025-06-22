@@ -15,7 +15,6 @@ const TIME_FILTERS: TimeFilter[] = [
 interface FiltersMenuProps {
   onTimeFilterChange: (hours: number) => void;
   isOpened: boolean;
-  setIsOpened: (isOpened: boolean) => void;
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
 }
@@ -23,7 +22,6 @@ interface FiltersMenuProps {
 const FiltersMenu: React.FC<FiltersMenuProps> = ({
   onTimeFilterChange,
   isOpened,
-  setIsOpened,
   selectedTags,
   onTagsChange
 }) => {
@@ -41,7 +39,7 @@ const FiltersMenu: React.FC<FiltersMenuProps> = ({
     
     // Load available tags
     api.getNewsTags().then(res => setAllTags(res.data));
-  }, []);
+  }, [onTimeFilterChange]);
 
   const handleTimeFilterChange = (filter: TimeFilter) => {
     setSelectedTime(filter);

@@ -29,7 +29,7 @@ const LoginForm: React.FC = () => {
       
       const returnTo = searchParams.get('returnTo') || '/map';
       router.push(returnTo);
-    } catch (err) {
+    } catch {
       setError('Неверный логин или пароль');
     } finally {
       setIsLoading(false);

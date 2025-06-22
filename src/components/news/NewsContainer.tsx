@@ -8,8 +8,7 @@ import Markdown from 'react-markdown';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-toastify';
 import Button from '../ui/Button';
-import { useRouter } from 'next/navigation';
-import { FaEllipsisH, FaTimes, FaMapMarkerAlt, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaMapMarkerAlt, FaTrash } from 'react-icons/fa';
 import remarkGfm from 'remark-gfm'
 
 import './NewsMarkdown.css';
@@ -22,33 +21,32 @@ interface NewsContainerProps {
 }
 
 const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPointClick, onClose }) => {
-  const { user, logout } = useUser();
+  const { user } = useUser();
 
-  const router = useRouter();
   const [owner, setOwner] = useState<User | null>(null);
   const [geoPoint, setGeoPoint] = useState<GeoPointResponse | null>(null);
 
   useEffect(() => {
     api.getUserByID(news.creator_id).then((response: AxiosResponse<User>) => {
       setOwner(response.data);
-    }).catch((error) => {
-      toast.error('Ошибка получения информации о пользователе');
+    }).catch(() => {
+      //toast.error('Ошибка получения информации о пользователе');
     });
 
     // Fetch geo point data
     api.getGeoPointByID(news.geodata_id.toString()).then((response: AxiosResponse<GeoPointResponse>) => {
       setGeoPoint(response.data);
-    }).catch((error) => {
-      toast.error('Ошибка получения координат');
+    }).catch(() => {
+      //toast.error('Ошибка получения координат');
     });
   }, [news]);
 
   const handleDeleteNews = () => {
-    api.deleteNews(news.id).then((response: AxiosResponse<void>) => {
+    api.deleteNews(news.id).then(() => {
       window.location.reload();
       toast.success('Новость удалена');
-    }).catch((error) => {
-      toast.error('Ошибка удаления новости');
+    }).catch(() => {
+      //toast.error('Ошибка удаления новости');
     });
   };
 
@@ -83,7 +81,9 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
       </div>
       <div className='absolute top-0 right-0 flex flex-row-reverse'>
         <Button variant='ghost' onClick={() => {
-          onClose && onClose();
+          if (onClose) {
+            onClose();
+          }
         }}>
           <FaTimes />
         </Button>
@@ -106,12 +106,6 @@ const NewsContainer: React.FC<NewsContainerProps> = ({ news, className, onGeoPoi
             <FaMapMarkerAlt />
           </Button>
         )}
-
-        {/* <Button variant='ghost' onClick={() => {
-          //TODO: action context menu
-        }}>
-          <FaEllipsisH />
-        </Button> */}
       </div>
       <Markdown 
         components={{

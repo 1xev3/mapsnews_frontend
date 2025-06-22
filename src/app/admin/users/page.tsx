@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import { User } from '@/types/ApiTypes';
 import { NavBar } from '@/components/map/NavBar';
@@ -22,10 +22,33 @@ const UserManagementPage: React.FC = () => {
     group_id: '0'
   });
 
+  const loadUsers = useCallback(async () => {
+    try {
+      const skip = Math.max(0, (currentPage - 1) * ITEMS_PER_PAGE);
+      const response = await api.getAllUsers(skip, ITEMS_PER_PAGE, searchEmail || undefined);
+      setUsers(response.data);
+      const total = response.headers['x-total-count'] 
+        ? parseInt(response.headers['x-total-count'])
+        : response.data.length;
+      setTotalUsers(total);
+    } catch {
+      setError('Ошибка при загрузке пользователей');
+    }
+  }, [currentPage, searchEmail]);
+
+  const loadGroups = useCallback(async () => {
+    try {
+      const response = await api.getUserGroups();
+      setGroups(response.data);
+    } catch {
+      setError('Ошибка при загрузке групп');
+    }
+  }, []);
+
   useEffect(() => {
     loadUsers();
     loadGroups();
-  }, [currentPage, searchEmail]);
+  }, [loadUsers, loadGroups]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -36,29 +59,6 @@ const UserManagementPage: React.FC = () => {
       });
     }
   }, [selectedUser]);
-
-  const loadUsers = async () => {
-    try {
-      const skip = Math.max(0, (currentPage - 1) * ITEMS_PER_PAGE);
-      const response = await api.getAllUsers(skip, ITEMS_PER_PAGE, searchEmail || undefined);
-      setUsers(response.data);
-      const total = response.headers['x-total-count'] 
-        ? parseInt(response.headers['x-total-count'])
-        : response.data.length;
-      setTotalUsers(total);
-    } catch (err) {
-      setError('Ошибка при загрузке пользователей');
-    }
-  };
-
-  const loadGroups = async () => {
-    try {
-      const response = await api.getUserGroups();
-      setGroups(response.data);
-    } catch (err) {
-      setError('Ошибка при загрузке групп');
-    }
-  };
 
   const handleUserClick = (user: User) => {
     setSelectedUser(user);
@@ -105,8 +105,8 @@ const UserManagementPage: React.FC = () => {
         await loadUsers();
         setSelectedUser(null);
       }
-    } catch (err) {
-      console.error('Update error:', err);
+    } catch {
+      console.error('Update error');
       setError('Ошибка при обновлении пользователя');
     } finally {
       setIsLoading(false);

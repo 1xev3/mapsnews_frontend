@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import dynamic from "next/dynamic";
 
 import { useMapEvents } from 'react-leaflet';
-import { saveUserLocation, getUserLocation } from '@/lib/news_data_storage';
+import { saveUserLocation } from '@/lib/news_data_storage';
 import { SearchPoint } from '@/types/MarkerData';
 const Circle = dynamic(() => import("react-leaflet").then(mod => mod.Circle), {ssr: false});
-const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), {ssr: false});
 
 import { FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
 
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { toast } from 'react-toastify';
 
 interface NewsSearchPointProps {
   setSearchPoint: (point: SearchPoint | null) => void;
@@ -69,11 +67,11 @@ const NewsSearchPoint: React.FC<NewsSearchPointProps> = ({ setSearchPoint, searc
         },
         (error) => {
           console.log("Ошибка получения геолокации:", error);
-          toast.error("Не удалось определить ваше местоположение");
+          //toast.error("Не удалось определить ваше местоположение");
         }
       );
     } else {
-      toast.error("Геолокация не поддерживается вашим браузером");
+      //toast.error("Геолокация не поддерживается вашим браузером");
     }
   };
 

@@ -25,7 +25,7 @@ const MapControls: React.FC<MapControlsProps> = ({
   selectedTags,
   onTagsChange
 }) => {
-  const { user, logout } = useUser();
+  const { user } = useUser();
   
   return (
     <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 rounded-lg p-2 items-end">
@@ -84,7 +84,6 @@ const MapControls: React.FC<MapControlsProps> = ({
         </Button>
         <FiltersMenu
           isOpened={showFiltersMenu}
-          setIsOpened={setShowFiltersMenu}
           onTimeFilterChange={onTimeFilterChange}
           selectedTags={selectedTags}
           onTagsChange={onTagsChange}
